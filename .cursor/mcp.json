@@ -14,7 +14,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://propeval_user:propeval_pass@localhost:5432/propeval"
+        "postgresql://propeval_user:propeval_pass@localhost:5433/propeval"
       ]
     }
   }
