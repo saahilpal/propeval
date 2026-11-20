@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added - Gate 5: Adversarial Red-Team & Edge-Case Hardening
 - **Permanent Regression Suite (`backend/tests/red_team/`):**
   - Added 27 dedicated attack & fuzzing regression tests covering all 6 threat vectors.
-  - Test count expanded from 51 to 79 automated tests across the workspace (79/79 passing in ~6.5s).
+  - Test count expanded from 51 to 79 automated tests across the workspace (79/79 passing in ~6.8s).
 - **Vector 1: OWASP LLM01 Indirect Prompt Injection & XML Nonce Escaping:**
   - Hardened `_format_transcript_with_nonce` with `sanitize_untrusted_transcript` to escape delimiter breakouts (`</transcript_...>`) and strip LLM control tokens (`<|im_start|>`, `<|system|>`, `[INST]`, `<<SYS>>`).
   - Added sanitization and DPDP PII scrubbing directly to `/api/v1/suites/replay/import`.
@@ -37,6 +37,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Hardened Wilcoxon signed-rank test on all-tied differences ($s_2 - s_1 = 0$), returning $p=1.0$ and zero correlation.
   - Extended Indian unit normalizers to support Devanagari numerals (`१२ लाख`, `१.५ करोड़`, `५० हज़ार`) and Hindi script terms (`बीएचके`, `कमरा`, `वर्ग फुट`) with full equivalence checking.
 
+### Added - Gate 3: Anti-Slop Workbench UI & Playwright Visual Verification
+- **Next.js 16.4.6 / React 19 Frontend (`web/`):**
+  - Linear / Vercel / Stripe Workbench anti-slop aesthetic: neutral canvas `#FAFAFA`, 1px solid borders `#E5E7EB`, tabular `IBM Plex Mono` for all numbers, CIs, and latencies. Zero purple gradients, zero radial dials.
+  - Direct proxy rewrites from Next.js (`http://localhost:3000/api/v1/*`) to live FastAPI backend (`http://127.0.0.1:8001/api/v1/*`).
+- **3 Purpose-Built Screens:**
+  - **Regression Diff Workbench (`/`):** Sticky prompt regression verdict banner (`PASSED`, `BLOCKED: Hard-Gate Regressions`), non-compensatory 4-gate scorecard (DNC, Invented Actions, RERA, Metamorphic), paired McNemar & Wilcoxon stats with visual Newcombe CI bar, and scenario triage table with keyboard shortcuts (`j`/`k`).
+  - **Synchronized Turn Inspector (`/runs/[id]/scenarios/[scenario_id]`):** Side-by-side turn-by-turn comparison of Baseline vs Candidate prompts, raw semantic intent vs 8 kHz Indian telephony ASR audio toggle, inline tool execution badges (`200 OK` vs `503 ERROR`), and failure assertion highlights.
+  - **Registry (`/registry`):** Prompt versions, versioned property truth fixtures (Lodha, DLF), and evaluation suites with SHA-256 integrity hashes.
+- **Playwright Visual Proof Loop (`backend/tests/test_playwright_workbench.py`):**
+  - Fully automated local browser verification across desktop `1440x900` and tablet `768x1024`.
+  - Verified 0 console errors, 0 React hydration warnings, and visual accessibility.
+  - Captured 6 clean verification screenshots in `web/screenshots/`.
+
 ### Added - Gate 2: Control Plane API, Durable SSE Stream, Worker & 5-Mutant Meta-Eval
 - **FastAPI Control Plane (`backend/app/main.py`, `backend/app/api/`):**
   - Live on `http://localhost:8001` with RFC 9457 Problem Details error formatting.
@@ -56,7 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `redact_pii_dpdp` with Verhoeff Aadhaar validation, PAN redaction, Indian phone scrubbing while preserving RERA numbers.
 - **5-Mutant Meta-Eval (`backend/tests/test_mutation_meta_eval.py`):**
   - Proves PropEval catches 5 out of 5 regressions (dropped DNC, stale RERA date, broken currency parse, invented WhatsApp confirmation after HTTP 503, malformed booking tool schema) locally at $0 spend.
-- 51/51 automated tests passing.
 
 ### Added - Gate 1: Core Database, Replay Engine, Evaluation Layers & Paired Stats
 - **Database & Storage (Postgres 17):**
@@ -79,5 +91,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Layer 2 Property Fact Verifier: negation-aware price, possession date, RERA check.
   - Layer 3 Cross-Family Rubric Judge with XML nonce framing and position swap debiasing.
   - Paired stats: Exact McNemar with Newcombe Method 10 CI, Wilcoxon Signed-Rank with rank-biserial correlation, Two-Stage Cluster BCa Bootstrap, Holm-Bonferroni correction, and `SMOKE_TEST_UNDERPOWERED` flagging.
-- Initialized clean repository structure from architecture package (`docs/`, `docs/adr/`).
-- Verified local and upstream engineering skill catalog.

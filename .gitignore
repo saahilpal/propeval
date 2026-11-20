@@ -7,3 +7,18 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+.venv/
+.env
+
+# Node & Next.js
+node_modules/
+web/node_modules/
+web/.next/
+web/.turbo/
+.next/
+dist/
+build/
+*.egg-info/
+
+# Archival mandate: docs research package moved to Desktop
+docs/
