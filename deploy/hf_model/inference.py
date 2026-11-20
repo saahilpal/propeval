@@ -6,8 +6,8 @@ Runs in < 0.4 ms on single-core CPU.
 from __future__ import annotations
 
 import argparse
-import sys
 from typing import Any
+
 import joblib
 import numpy as np
 
