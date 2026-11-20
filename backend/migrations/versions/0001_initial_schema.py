@@ -96,7 +96,7 @@ def upgrade() -> None:
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
-        suite_tier TEXT NOT NULL CHECK (suite_tier IN ('smoke_pr', 'release_gate', 'metamorphic', 'canary_spc')),
+        suite_tier TEXT NOT NULL CHECK (suite_tier IN ('smoke_pr', 'release_gate', 'metamorphic', 'canary_spc', 'custom')),
         version_tag TEXT NOT NULL,
         scenarios_json JSONB NOT NULL,
         scenario_count INT NOT NULL CHECK (scenario_count > 0),
@@ -119,7 +119,7 @@ def upgrade() -> None:
         simulator_model_id TEXT NOT NULL,
         judge_model_id TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'QUEUED'
-            CHECK (status IN ('QUEUED','RUNNING','COMPUTING_STATS','PASSED','REGRESSED',
+            CHECK (status IN ('QUEUED','RUNNING','COMPUTING_STATS','COMPLETED','PASSED','REGRESSED',
                               'INCONCLUSIVE_UNDERPOWERED','BUDGET_EXCEEDED','EARLY_ABORTED_HARM','FAILED')),
         max_budget_usd NUMERIC(10,4) NOT NULL CHECK (max_budget_usd > 0),
         spent_usd NUMERIC(10,4) NOT NULL DEFAULT 0.0000 CHECK (spent_usd >= 0),

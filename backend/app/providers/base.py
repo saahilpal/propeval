@@ -11,6 +11,7 @@ __all__ = [
     "LLMProvider",
     "LLMResponse",
     "TargetAgentAdapter",
+    "get_llm_provider",
 ]
 
 
@@ -236,7 +237,18 @@ class DeterministicReplayProvider:
         )
 
 
-def get_llm_provider(provider_name: str = "deterministic", model_id: str = "deterministic-replay-v1") -> LLMProvider:
+def get_llm_provider(
+    provider_name: str = "deterministic",
+    model_id: str = "deterministic-replay-v1",
+) -> LLMProvider:
     """Factory returning configured LLMProvider (defaults to $0 DeterministicReplayProvider)."""
+    norm_provider = (provider_name or "").lower().strip()
+    norm_model = (model_id or "").lower().strip()
+
+    if norm_provider == "ollama" or norm_model.startswith("ollama:") or "ollama" in norm_model:
+        from backend.app.providers.ollama import OllamaProvider
+
+        return OllamaProvider(default_model=model_id)
+
     return DeterministicReplayProvider()
 

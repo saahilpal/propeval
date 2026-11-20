@@ -40,6 +40,11 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://propeval_user:propeval_pass@postgres:5432/propeval
       - DATABASE_URL_SYNC=postgresql://propeval_user:propeval_pass@postgres:5432/propeval
+    volumes:
+      - ./backend:/app/backend
+      - ./benchmarks:/app/benchmarks
+      - ./suites:/app/suites
+      - ./fixtures:/app/fixtures
     depends_on:
       postgres:
         condition: service_healthy

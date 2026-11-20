@@ -24,6 +24,8 @@ async def test_worker_sigkill_reclamation_and_fencing():
     fixture_id = uuid4()
 
     async with pool.acquire() as conn:
+        await conn.execute("UPDATE eval_jobs SET status = 'COMPLETED' WHERE status IN ('QUEUED', 'RUNNING')")
+
         # 1. Seed tenant and prerequisite rows
         await conn.execute(
             "INSERT INTO tenants (id, name, encrypted_dek) VALUES ($1, 'Test Tenant', $2)",

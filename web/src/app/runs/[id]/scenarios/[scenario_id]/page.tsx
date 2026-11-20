@@ -158,15 +158,14 @@ export default function ScenarioInspectorPage() {
             <Cpu className="w-4 h-4 text-accent-emerald" />
             <span className="font-bold text-ink-primary uppercase tracking-wide text-[11px]">Laya Dual-Speed Router:</span>
           </div>
-          <span className="text-ink-secondary text-[11px]">
-            {baseline?.turns.length || 0} turns evaluated &bull;{" "}
-            <span className="text-accent-emerald font-semibold tabular-nums">
-              {(cascadeMetrics?.resolution_rate_pct ?? 92.06).toFixed(2)}% System-1 Fast Path ({(cascadeMetrics?.cpu_latency_p50_ms ?? 0.365).toFixed(3)}ms P50 CPU)
-            </span>{" "}
-            &bull;{" "}
-            <span className="text-accent-amber font-semibold tabular-nums">
-              {(cascadeMetrics?.escalation_rate_pct ?? 7.94).toFixed(2)}% Frontier Escalation
-            </span>.
+          <span className="text-ink-secondary text-[11px] flex flex-wrap items-center gap-2">
+            <span>{baseline?.turns.length || 0} turns evaluated &bull;</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-accent-emerald border border-emerald-200 font-semibold tabular-nums">
+              RESOLVED (S1): {(cascadeMetrics?.resolution_rate_pct ?? 92.06).toFixed(1)}% ($0.00)
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-accent-amber border border-amber-200 font-semibold tabular-nums">
+              ESCALATED (S2): {(cascadeMetrics?.escalation_rate_pct ?? 7.94).toFixed(1)}% (Frontier Gated)
+            </span>
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-[10px]">

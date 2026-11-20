@@ -50,20 +50,65 @@ async def test_playwright_visual_proof_loop():
             # 1. Product Landing Page (/)
             page_home = await browser.new_page(viewport={"width": vp["width"], "height": vp["height"]})
             attach_error_tracker(page_home, all_errors)
-            await page_home.goto(f"{LOCAL_URL}/", wait_until="networkidle")
+            await page_home.goto(f"{LOCAL_URL}/", wait_until="domcontentloaded")
             await page_home.wait_for_selector("text=PropEval")
             await page_home.wait_for_selector("text=Pre-Release Prompt Regression")
-            await page_home.wait_for_selector("text=Open Live Workbench")
+            await page_home.wait_for_selector("text=Try Live Workbench")
             await page_home.screenshot(path=f"web/screenshots/landing_{vp['name']}.png", full_page=True)
             await page_home.close()
 
             # 2. Live Workbench Page (/workbench)
             page_wb = await browser.new_page(viewport={"width": vp["width"], "height": vp["height"]})
             attach_error_tracker(page_wb, all_errors)
-            await page_wb.goto(f"{LOCAL_URL}/workbench", wait_until="networkidle")
-            await page_wb.wait_for_selector("text=PropEval")
+            await page_wb.goto(f"{LOCAL_URL}/workbench", wait_until="domcontentloaded")
+            await page_wb.wait_for_selector("text=Evaluation Workbench")
+            await page_wb.wait_for_selector("text=+ Custom Scenario")
+            await page_wb.wait_for_selector("text=+ Create / Test Custom Prompt")
             await page_wb.wait_for_selector("text=Scenario Triage")
+
+            # Verify all 4 dropdowns are populated with at least 2 options each
+            baseline_sel = await page_wb.wait_for_selector("label:has-text('Baseline Prompt') + select")
+            assert len(await baseline_sel.query_selector_all("option")) >= 2, "Baseline prompt select has < 2 options"
+
+            candidate_sel = await page_wb.wait_for_selector("label:has-text('Candidate Prompt') + select")
+            assert len(await candidate_sel.query_selector_all("option")) >= 2, "Candidate prompt select has < 2 options"
+
+            suite_sel = await page_wb.wait_for_selector("label:has-text('Suite') + select")
+            assert len(await suite_sel.query_selector_all("option")) >= 2, "Suite select has < 2 options"
+
+            fixture_sel = await page_wb.wait_for_selector("label:has-text('Fixture') + select")
+            assert len(await fixture_sel.query_selector_all("option")) >= 2, "Fixture select has < 2 options"
+
+            # Execute Guided Custom Scenario Drawer flow on desktop viewport
+            if vp["name"] == "1440x900":
+                await page_wb.click("text=+ Custom Scenario")
+                await page_wb.wait_for_selector("text=Custom Scenario Builder")
+
+                # Click first one-click chip "Acoustic 1.2 Cr Misparse"
+                await page_wb.click("text=Acoustic 1.2 Cr Misparse")
+
+                # Verify stress switch checkboxes are present
+                await page_wb.wait_for_selector("text=8 kHz Telephony ASR Noise")
+                await page_wb.wait_for_selector("text=CRM HTTP 503 Outage")
+
+                # Click Save & Run This Scenario Now
+                await page_wb.click("text=Save & Run This Scenario Now")
+
+                # Wait for SSE run updates / plain-English summary banner
+                await page_wb.wait_for_selector("text=Run ID:", timeout=25000)
+                verdict_el = await page_wb.wait_for_selector("text=SHIP", timeout=25000)
+                assert verdict_el is not None
+                verdict_text = await verdict_el.text_content() or ""
+                assert "BLOCKED" in verdict_text or "PASS" in verdict_text or "SHIP" in verdict_text
+
+                # Take screenshot of custom scenario run
+                await page_wb.screenshot(path="web/screenshots/custom_scenario_run.png", full_page=True)
+
+            # Switch to Tab 2: Statistical & Laya Telemetry to verify Laya cascade cards
+            await page_wb.click("text=Statistical & Laya Telemetry")
             await page_wb.wait_for_selector("text=Laya System-1 Cascade")
+            # Switch back to Tab 1: Regressions & Scenario Triage
+            await page_wb.click("text=Regressions & Scenario Triage")
             await page_wb.screenshot(path=f"web/screenshots/workbench_{vp['name']}.png", full_page=True)
             if vp["name"] == "1440x900":
                 await page_wb.screenshot(path="web/screenshots/hero_diff.png", full_page=True)
@@ -72,7 +117,7 @@ async def test_playwright_visual_proof_loop():
             # 3. Registry Page (/registry)
             page_reg = await browser.new_page(viewport={"width": vp["width"], "height": vp["height"]})
             attach_error_tracker(page_reg, all_errors)
-            await page_reg.goto(f"{LOCAL_URL}/registry", wait_until="networkidle")
+            await page_reg.goto(f"{LOCAL_URL}/registry", wait_until="domcontentloaded")
             await page_reg.wait_for_selector("text=Prompt & RERA Project Registry")
             await page_reg.screenshot(path=f"web/screenshots/registry_{vp['name']}.png", full_page=True)
             await page_reg.close()
@@ -82,7 +127,7 @@ async def test_playwright_visual_proof_loop():
             attach_error_tracker(page_scen, all_errors)
             await page_scen.goto(
                 f"{LOCAL_URL}/runs/{latest_run_id}/scenarios/smoke_01_std_lodha_2bhk",
-                wait_until="networkidle",
+                wait_until="domcontentloaded",
             )
             await page_scen.wait_for_selector("text=smoke_01_std_lodha_2bhk")
             await page_scen.wait_for_selector("text=RESOLVED (S1)")
@@ -99,16 +144,17 @@ async def test_playwright_visual_proof_loop():
             attach_error_tracker(page_tunnel, tunnel_errors)
 
             # Test Landing via Tunnel
-            await page_tunnel.goto(f"{TUNNEL_URL}/", wait_until="networkidle", timeout=15000)
+            await page_tunnel.goto(f"{TUNNEL_URL}/", wait_until="domcontentloaded", timeout=15000)
             await page_tunnel.wait_for_selector("text=Pre-Release Prompt Regression")
 
             # Test Workbench via Tunnel
-            await page_tunnel.goto(f"{TUNNEL_URL}/workbench", wait_until="networkidle", timeout=15000)
+            await page_tunnel.goto(f"{TUNNEL_URL}/workbench", wait_until="domcontentloaded", timeout=15000)
             await page_tunnel.wait_for_selector("text=Scenario Triage")
+            await page_tunnel.click("text=Statistical & Laya Telemetry")
             await page_tunnel.wait_for_selector("text=Laya System-1 Cascade")
 
             # Test Registry via Tunnel
-            await page_tunnel.goto(f"{TUNNEL_URL}/registry", wait_until="networkidle", timeout=15000)
+            await page_tunnel.goto(f"{TUNNEL_URL}/registry", wait_until="domcontentloaded", timeout=15000)
             await page_tunnel.wait_for_selector("text=Prompt & RERA Project Registry")
 
             await page_tunnel.close()
@@ -126,3 +172,5 @@ async def test_playwright_visual_proof_loop():
     assert os.path.getsize("web/screenshots/hero_diff.png") > 10000, "hero_diff.png is too small"
     assert os.path.exists("web/screenshots/turn_inspector.png"), "Missing turn_inspector.png"
     assert os.path.getsize("web/screenshots/turn_inspector.png") > 10000, "turn_inspector.png is too small"
+    assert os.path.exists("web/screenshots/custom_scenario_run.png"), "Missing custom_scenario_run.png"
+    assert os.path.getsize("web/screenshots/custom_scenario_run.png") > 10000, "custom_scenario_run.png is too small"

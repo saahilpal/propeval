@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from backend.app.api.fixtures import router as fixtures_router
 from backend.app.api.metrics import router as metrics_router
+from backend.app.api.models import router as models_router
 from backend.app.api.prompts import router as prompts_router
 from backend.app.api.runs import router as runs_router
 from backend.app.api.suites import router as suites_router
@@ -26,8 +27,16 @@ async def lifespan(app: FastAPI):
     # Startup: initialize connection pool
     logger.info("Initializing PostgreSQL connection pool...")
     try:
-        await get_pool()
+        pool = await get_pool()
         logger.info("PostgreSQL pool ready.")
+        try:
+            from backend.app.storage.seed_demo import seed_demo_data
+
+            logger.info("Seeding demo data if not present...")
+            await seed_demo_data(pool)
+            logger.info("Demo data verified.")
+        except Exception as seed_err:
+            logger.error(f"Error seeding demo data: {seed_err}", exc_info=True)
     except Exception as e:
         logger.warning(f"Could not connect to PostgreSQL on startup (will retry on request): {e}")
 
@@ -53,6 +62,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 
@@ -101,6 +111,7 @@ async def health_check():
 
 
 # Include Routers under /api/v1
+app.include_router(models_router, prefix="/api/v1")
 app.include_router(prompts_router, prefix="/api/v1")
 app.include_router(fixtures_router, prefix="/api/v1")
 app.include_router(suites_router, prefix="/api/v1")

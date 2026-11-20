@@ -5,6 +5,35 @@ All notable changes to PropEval will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.0] - 2026-11-20
+
+### Added - Founder-Testable Production Prototype, Custom Builders & Live Cloudflare Demo
+- **Guided Fill-in-the-Blank Custom Prompt Builder (`CustomPromptDrawer.tsx`):**
+  - Slide-over drawer on `/workbench` with dual mode (Guided Fill-in-the-Blank + Raw Markdown toggle).
+  - Structured persona configuration: Agent Name, Project/Developer, Language Mix (Hinglish/Hindi/English/Regional), Tone.
+  - Qualification Checklist multi-selects: Budget, Configuration, Possession Timeline, Locality, Site Visit.
+  - 4 Critical Safety Guardrail Toggles (TRAI DNC opt-out, RERA grounding, Honest tool confirmations, Voice conciseness) designed so founders can flip one switch off and watch PropEval catch regressions in real-time.
+  - Real-time compiled prompt preview and one-click `Save as Candidate (V2) & Run`.
+- **Guided Fill-in-the-Blank Custom Scenario Builder (`CustomScenarioDrawer.tsx` + `POST /api/v1/suites/custom-scenario`):**
+  - Slide-over drawer with 3 one-click Hinglish scenario chips (*Acoustic 1.2 Cr Misparse*, *TRAI DNC Immediate Opt-out*, *CRM WhatsApp 503 Outage Trap*).
+  - Stress switches for 8 kHz telephony ASR noise (`"crore" -> "core"`), CRM HTTP 503 tool failures, TRAI DNC refusal, and RERA carpet-area traps.
+  - Backend compiler converting structured inputs into executable `BuyerAgendaFSM` + perturbation configs in PostgreSQL.
+  - One-click `Save & Run This Scenario Now` auto-selecting the suite and executing live V1 vs V2 SSE runs.
+- **Idempotent PostgreSQL 17 Startup Seeder (`backend/app/storage/seed_demo.py`):**
+  - Preloads 3 real Indian real-estate system prompts (`v1.0 Baseline`, `v2.0 Aggressive Pitch`, `v2.1 Hardened Release Candidate`).
+  - Preloads 2 Stratified Suites (20-scenario smoke, 50-scenario release gate) and 2 RERA Fixtures (*Lodha Crown Wakad — Pune*, *DLF Cyber City Phase 3 — Gurugram*).
+  - Preloads 1 Completed Baseline Comparison Run (`v1.0 vs v2.0`) with 40 jobs, turns, assertions, paired stats, and 3 hard-gate regressions so `/workbench` is populated immediately on cold boot.
+  - Plain-English Executive Summary on `GET /api/v1/runs/{run_id}/diff` (`verdict`, `headline`, `key_findings`, `recommendation`).
+- **Real Local Ollama LLM Execution Mode (`OllamaProvider` + `backend/app/api/models.py`):**
+  - Wired local Ollama (`qwen3.5:9b-nvfp4` / `gemma4:12b`) on port 11434 with streaming SSE, OpenAI-compatible telephony tool calling, and auto-fallback to deterministic replay.
+  - Toggle between *"Fast Local Engine (~3s)"* and *"Live Local Ollama LLM"* in the Workbench run bar.
+- **`animejs 4.5.0` Landing Page & Workbench Overhaul:**
+  - Route-aware Navbar, zero fake SVGs, verified Draw.io architecture diagrams, top-of-page Plain-English "What Broke & Ship Verdict" summary, and 3 clean tabs (Triage, Stats & Laya Telemetry, Prompt Diff).
+- **Playwright E2E Verification Across 4 Viewports & Live Cloudflare Tunnel:**
+  - 156/156 automated tests passing in 12.99s.
+  - Full Playwright E2E verification of custom scenario execution and dropdown population passing in 5.23s.
+  - Live public demo operational at `https://dat-dna-heritage-collectables.trycloudflare.com`.
+
 ## [v0.5.0] - 2026-11-20
 
 ### Added - Product Launch: SaaS Product Experience & Single-URL Cloudflare Tunnel

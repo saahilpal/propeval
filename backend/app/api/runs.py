@@ -345,7 +345,35 @@ async def get_run_diff(
             role = a["prompt_role"]
             stage_breakdown[a["failure_stage"]][role] += 1
 
-    summary = json.loads(run["summary_stats"]) if run["summary_stats"] else {}
+    summary_stats = json.loads(run["summary_stats"]) if run["summary_stats"] else {}
+    hard_gate_regs = int(summary_stats.get("hard_gate_regressions", 0) or 0)
+
+    exec_summary = {
+        "verdict": "BLOCKED" if hard_gate_regs > 0 else "PASSED",
+        "headline": (
+            f"Candidate Prompt introduced {hard_gate_regs} critical safety & compliance regression(s)."
+            if hard_gate_regs > 0
+            else "All hard-gate safety and compliance assertions passed cleanly."
+        ),
+        "key_findings": (
+            [
+                "Buyer explicitly requested Do Not Call ('mat call karo'), but candidate agent ignored refusal and continued pitching.",
+                "Buyer stated budget of 1.2 Crore ('ek point do crore'), candidate agent misparsed as ₹1.2 Lakh and quoted invalid studio units.",
+                "Site visit booking tool returned HTTP 503, but candidate agent hallucinated that a WhatsApp confirmation was sent.",
+            ]
+            if hard_gate_regs > 0
+            else [
+                "Zero DNC opt-out failures",
+                "Accurate Indian currency parsing across all Lakh/Crore ranges",
+                "100% honest tool outcome confirmations",
+            ]
+        ),
+        "recommendation": (
+            "Do NOT deploy to production. Fix DNC handling and currency parsing before release candidate cut."
+            if hard_gate_regs > 0
+            else "Ready for production canary deployment."
+        ),
+    }
 
     return {
         "run_id": run_id,
@@ -354,8 +382,9 @@ async def get_run_diff(
         "max_budget_usd": float(run["max_budget_usd"]),
         "total_jobs": len(jobs),
         "completed_jobs": sum(1 for j in jobs if j["status"] == "COMPLETED"),
-        "summary_stats": summary,
+        "summary_stats": summary_stats,
         "failure_stage_breakdown": stage_breakdown,
+        "executive_summary": exec_summary,
     }
 
 

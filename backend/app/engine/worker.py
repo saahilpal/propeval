@@ -100,6 +100,8 @@ async def execute_eval_job(
     )
     fsm = BuyerAgendaFSM(agenda=agenda)
 
+    sim_model_id = str(run_row["simulator_model_id"] or "deterministic")
+    sim_provider = get_llm_provider("ollama" if "ollama" in sim_model_id.lower() else "deterministic", sim_model_id)
     llm_provider = get_llm_provider(model_provider, model_id)
     history: list[LLMMessage] = [LLMMessage(role="system", content=system_prompt)]
 
@@ -116,6 +118,25 @@ async def execute_eval_job(
         turn_index += 1
         directive = fsm.step(last_agent_utterance=previous_agent_text)
         buyer_raw = directive.text
+
+        # Dynamic Ollama surface realization if configured (ADR-003)
+        if "ollama" in sim_model_id.lower() and not fsm.is_terminal():
+            try:
+                realize_prompt = (
+                    f"You are a prospective Indian home buyer inquiring in Hinglish about {agenda.target_project}. "
+                    f"Dialogue goal for this turn: '{directive.text}'. "
+                    f"Express this goal in exactly one natural Hinglish sentence. Do not output anything else."
+                )
+                sim_resp = await sim_provider.complete(
+                    messages=[LLMMessage(role="user", content=realize_prompt)],
+                    model_id=sim_model_id,
+                    temperature=0.7,
+                    max_tokens=60,
+                )
+                if sim_resp.text and sim_resp.text.strip():
+                    buyer_raw = sim_resp.text.strip().strip('"')
+            except Exception as sim_err:
+                logger.debug("Ollama buyer realizer fallback to directive text: %s", sim_err)
         buyer_perturbed = asr_engine.perturb(buyer_raw, error_rate=0.15)
 
         history.append(LLMMessage(role="user", content=buyer_perturbed))

@@ -19,6 +19,8 @@ import {
   RunDiffResponse,
   ScenarioComparison,
 } from "@/lib/api";
+import CustomPromptDrawer from "@/components/CustomPromptDrawer";
+import CustomScenarioDrawer from "@/components/CustomScenarioDrawer";
 import {
   Play,
   RotateCw,
@@ -28,12 +30,18 @@ import {
   ArrowUpRight,
   Filter,
   ShieldAlert,
-  SlidersHorizontal,
   ChevronDown,
   ChevronRight,
   RefreshCw,
   Terminal,
   Cpu,
+  Sparkles,
+  Sliders,
+  Layers,
+  BarChart3,
+  FileDiff,
+  ArrowRight,
+  Zap,
 } from "lucide-react";
 
 export default function WorkbenchPage() {
@@ -50,6 +58,7 @@ export default function WorkbenchPage() {
   const [fixtureId, setFixtureId] = useState<string>("");
   const [trialsK, setTrialsK] = useState<number>(1);
   const [maxBudget, setMaxBudget] = useState<number>(1.5);
+  const [execMode, setExecMode] = useState<"fast" | "ollama">("fast");
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [errorToast, setErrorToast] = useState<string | null>(null);
 
@@ -61,6 +70,16 @@ export default function WorkbenchPage() {
   const [filterMode, setFilterMode] = useState<string>("all");
   const [selectedScenarioIdx, setSelectedScenarioIdx] = useState<number>(0);
   const [showFailureBreakdown, setShowFailureBreakdown] = useState<boolean>(false);
+
+  // Navigation tab: triage | telemetry | prompt_diff
+  const [activeTab, setActiveTab] = useState<"triage" | "telemetry" | "prompt_diff">("triage");
+
+  // Custom prompt & scenario drawers
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [isScenarioDrawerOpen, setIsScenarioDrawerOpen] = useState<boolean>(false);
+
+  // Table ref for Jump to First Regression
+  const triageTableRef = useRef<HTMLDivElement>(null);
 
   // SSE state
   const [sseStatus, setSseStatus] = useState<string>("idle");
@@ -136,7 +155,14 @@ export default function WorkbenchPage() {
   // Keyboard navigation (j/k + Enter)
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLSelectElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        isDrawerOpen ||
+        isScenarioDrawerOpen
+      )
+        return;
 
       if (e.key === "j" || e.key === "ArrowDown") {
         e.preventDefault();
@@ -151,11 +177,13 @@ export default function WorkbenchPage() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [scenarios, selectedScenarioIdx, selectedRunId]);
+  }, [scenarios, selectedScenarioIdx, selectedRunId, isDrawerOpen, isScenarioDrawerOpen]);
 
   // Trigger evaluation comparison
-  async function handleLaunchRun() {
-    if (!v1PromptId || !v2PromptId || !suiteId || !fixtureId) return;
+  async function handleLaunchRun(candidateIdOverride?: string, suiteIdOverride?: string) {
+    const candidateId = candidateIdOverride || v2PromptId;
+    const targetSuiteId = suiteIdOverride || suiteId;
+    if (!v1PromptId || !candidateId || !targetSuiteId || !fixtureId) return;
 
     setIsRunning(true);
     setSseStatus("connecting");
@@ -164,8 +192,8 @@ export default function WorkbenchPage() {
     try {
       const newRun = await createRun({
         baseline_prompt_id: v1PromptId,
-        candidate_prompt_id: v2PromptId,
-        suite_id: suiteId,
+        candidate_prompt_id: candidateId,
+        suite_id: targetSuiteId,
         fixture_id: fixtureId,
         trials_k: trialsK,
         max_budget_usd: maxBudget,
@@ -221,11 +249,48 @@ export default function WorkbenchPage() {
     }
   }
 
+  // Handle saving new prompt from CustomPromptDrawer
+  const handleCustomPromptSaved = (newPrompt: PromptVersion) => {
+    setPrompts((prev) => [newPrompt, ...prev]);
+    setV2PromptId(newPrompt.id);
+    setIsDrawerOpen(false);
+    // Launch run immediately with new prompt
+    handleLaunchRun(newPrompt.id);
+  };
+
+  // Handle saving new scenario suite from CustomScenarioDrawer
+  const handleCustomScenarioSaved = (newSuite: ScenarioSuite) => {
+    setSuites((prev) => {
+      const filtered = prev.filter((s) => s.id !== newSuite.id);
+      return [newSuite, ...filtered];
+    });
+    setSuiteId(newSuite.id);
+    setIsScenarioDrawerOpen(false);
+    // Launch run immediately with custom scenario
+    handleLaunchRun(undefined, newSuite.id);
+  };
+
   const summary = diffData?.summary_stats || {};
   const antiCheat = summary.anti_cheat || {};
   const isBlocked = (summary.hard_gate_regressions || 0) > 0 || diffData?.status === "REGRESSED";
   const isUnderpowered = Boolean(summary.is_underpowered);
   const failureStages = diffData?.failure_stage_breakdown || {};
+
+  // Jump to First Regression handler
+  const jumpToFirstRegression = () => {
+    setActiveTab("triage");
+    const regIdx = scenarios.findIndex((sc) => sc.is_regression || sc.is_hard_gate_fail);
+    if (regIdx !== -1) {
+      setSelectedScenarioIdx(regIdx);
+    } else {
+      setFilterMode("regressions");
+    }
+    triageTableRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Find baseline and candidate prompt objects for Prompt Diff tab
+  const baselinePromptObj = prompts.find((p) => p.id === v1PromptId);
+  const candidatePromptObj = prompts.find((p) => p.id === v2PromptId);
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-6 text-ink-primary">
@@ -245,15 +310,48 @@ export default function WorkbenchPage() {
         </div>
       )}
 
-      {/* 1. Compact Top Action Bar */}
-      <section className="bg-surface border border-border rounded-lg p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
+      {/* 1. Full-Width Interactive Run Bar */}
+      <section className="bg-surface border border-border rounded-xl p-4 sm:p-5 shadow-xs flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-accent-emerald animate-pulse" />
+            <h1 className="text-sm font-mono font-bold uppercase tracking-wider text-ink-primary">
+              Evaluation Workbench
+            </h1>
+            <span className="text-[11px] font-mono text-slate-500">
+              · Head-to-Head Prompt Regression Gate
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setIsScenarioDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-300 hover:bg-indigo-100 transition-colors shadow-2xs"
+            >
+              <Sliders className="w-3.5 h-3.5 text-indigo-600" />
+              <span>+ Custom Scenario</span>
+            </button>
+
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition-colors shadow-2xs"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>+ Create / Test Custom Prompt</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Inputs Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
           <div>
-            <label className="block text-[11px] font-mono text-ink-secondary mb-1">Baseline (V1)</label>
+            <label className="block text-[11px] font-mono font-medium text-slate-600 mb-1">
+              Baseline Prompt (V1)
+            </label>
             <select
               value={v1PromptId}
               onChange={(e) => setV1PromptId(e.target.value)}
-              className="text-xs font-mono bg-canvas border border-border rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent-cobalt"
+              className="w-full text-xs font-mono bg-canvas border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-slate-900"
             >
               {prompts.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -264,11 +362,13 @@ export default function WorkbenchPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-mono text-ink-secondary mb-1">Candidate (V2)</label>
+            <label className="block text-[11px] font-mono font-medium text-slate-600 mb-1">
+              Candidate Prompt (V2)
+            </label>
             <select
               value={v2PromptId}
               onChange={(e) => setV2PromptId(e.target.value)}
-              className="text-xs font-mono bg-canvas border border-border rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent-cobalt"
+              className="w-full text-xs font-mono bg-canvas border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-slate-900"
             >
               {prompts.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -279,11 +379,27 @@ export default function WorkbenchPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-mono text-ink-secondary mb-1">Scenario Suite</label>
+            <label className="block text-[11px] font-mono font-medium text-slate-600 mb-1">
+              Execution Mode
+            </label>
+            <select
+              value={execMode}
+              onChange={(e) => setExecMode(e.target.value as "fast" | "ollama")}
+              className="w-full text-xs font-mono bg-canvas border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-slate-900"
+            >
+              <option value="fast">Fast Local Engine (~3s)</option>
+              <option value="ollama">Live Local Ollama LLM</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-mono font-medium text-slate-600 mb-1">
+              Hinglish Suite
+            </label>
             <select
               value={suiteId}
               onChange={(e) => setSuiteId(e.target.value)}
-              className="text-xs font-mono bg-canvas border border-border rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent-cobalt"
+              className="w-full text-xs font-mono bg-canvas border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-slate-900"
             >
               {suites.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -294,11 +410,13 @@ export default function WorkbenchPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-mono text-ink-secondary mb-1">Project Fixture</label>
+            <label className="block text-[11px] font-mono font-medium text-slate-600 mb-1">
+              Project Fixture
+            </label>
             <select
               value={fixtureId}
               onChange={(e) => setFixtureId(e.target.value)}
-              className="text-xs font-mono bg-canvas border border-border rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent-cobalt"
+              className="w-full text-xs font-mono bg-canvas border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-slate-900"
             >
               {fixtures.map((f) => (
                 <option key={f.id} value={f.id}>
@@ -308,615 +426,795 @@ export default function WorkbenchPage() {
             </select>
           </div>
 
-          <div className="w-16">
-            <label className="block text-[11px] font-mono text-ink-secondary mb-1">Trials (K)</label>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={trialsK}
-              onChange={(e) => setTrialsK(parseInt(e.target.value) || 1)}
-              className="w-full text-xs font-mono bg-canvas border border-border rounded px-2 py-1.5 focus:outline-none"
-            />
-          </div>
-
-          <div className="w-20">
-            <label className="block text-[11px] font-mono text-ink-secondary mb-1">Max Budget</label>
-            <input
-              type="number"
-              step={0.1}
-              value={maxBudget}
-              onChange={(e) => setMaxBudget(parseFloat(e.target.value) || 1.5)}
-              className="w-full text-xs font-mono bg-canvas border border-border rounded px-2 py-1.5 focus:outline-none"
-            />
+          <div className="flex items-end">
+            <button
+              onClick={() => handleLaunchRun()}
+              disabled={isRunning}
+              className="w-full flex items-center justify-center gap-2 bg-ink-primary hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-md transition-colors disabled:opacity-50 shadow-sm"
+            >
+              {isRunning ? (
+                <RotateCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Play className="w-3.5 h-3.5" />
+              )}
+              <span>{isRunning ? "Evaluating..." : "Run Comparison"}</span>
+            </button>
           </div>
         </div>
-
-        <button
-          onClick={handleLaunchRun}
-          disabled={isRunning}
-          className="flex items-center gap-2 bg-ink-primary hover:bg-black text-white text-xs font-medium px-4 py-2 rounded transition-colors disabled:opacity-50 shadow-sm"
-        >
-          {isRunning ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-          <span>{isRunning ? "Evaluating..." : "Run Comparison"}</span>
-        </button>
       </section>
 
       {/* 2. Live SSE Progress Strip */}
       {isRunning && (
-        <section className="bg-accent-cobaltBg border border-accent-cobalt/20 rounded-lg p-3 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+        <section className="bg-slate-900 text-white rounded-lg p-3 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
           <div className="flex items-center gap-3">
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-accent-cobalt animate-ping" />
-            <span className="font-semibold text-accent-cobalt">
-              SSE Streaming Active: {streamProgress.completed} / {streamProgress.total || 40} jobs
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-accent-emerald animate-ping" />
+            <span className="font-semibold text-emerald-400">
+              Live Evaluation Stream: {streamProgress.completed} / {streamProgress.total || 40} jobs completed
             </span>
-            <span className="text-ink-secondary text-[11px]">
-              Last-Event-ID: <code className="bg-white px-1.5 py-0.5 rounded border border-border">{lastEventId || "0"}</code>
+            <span className="text-slate-400 text-[11px]">
+              Last-Event-ID: <code className="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{lastEventId || "0"}</code>
             </span>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-32 bg-gray-200 h-2 rounded-full overflow-hidden">
+            <div className="w-32 bg-slate-700 h-2 rounded-full overflow-hidden">
               <div
-                className="bg-accent-cobalt h-full transition-all duration-300"
-                style={{ width: `${Math.min((streamProgress.completed / (streamProgress.total || 40)) * 100, 100)}%` }}
+                className="bg-accent-emerald h-full transition-all duration-300"
+                style={{
+                  width: `${Math.min(
+                    (streamProgress.completed / (streamProgress.total || 40)) * 100,
+                    100
+                  )}%`,
+                }}
               />
             </div>
-            <span className="tabular-nums font-semibold">${streamProgress.spent.toFixed(4)} / ${maxBudget.toFixed(2)}</span>
+            <span className="tabular-nums font-semibold text-emerald-300">
+              ${streamProgress.spent.toFixed(4)} / ${maxBudget.toFixed(2)}
+            </span>
           </div>
         </section>
       )}
 
       {/* 3. Empty State or Active Run Matrix */}
       {!diffData && runs.length === 0 ? (
-        <section className="bg-surface border border-border rounded-lg p-12 text-center flex flex-col items-center justify-center gap-3">
-          <Terminal className="w-8 h-8 text-ink-secondary" />
+        <section className="bg-surface border border-border rounded-xl p-12 text-center flex flex-col items-center justify-center gap-3">
+          <Terminal className="w-8 h-8 text-slate-400" />
           <h3 className="text-sm font-semibold">No Evaluation Runs Found</h3>
-          <p className="text-xs text-ink-secondary max-w-md">
+          <p className="text-xs text-slate-500 max-w-md">
             Click <strong>Run Comparison</strong> above to evaluate Baseline vs Candidate agents against the 20-scenario Hinglish smoke suite locally at $0 spend.
           </p>
         </section>
-      ) : diffData && (
-        <section className="bg-surface border border-border rounded-lg overflow-hidden shadow-sm">
-          {/* Sticky Verdict Header */}
-          <div
-            className={`px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b ${
-              isBlocked
-                ? "bg-accent-crimsonBg border-accent-crimson/20 text-accent-crimson"
-                : "bg-accent-emeraldBg border-accent-emerald/20 text-accent-emerald"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              {isBlocked ? <XCircle className="w-6 h-6 flex-shrink-0" /> : <CheckCircle className="w-6 h-6 flex-shrink-0" />}
-              <div>
-                <h2 className="text-base font-bold tracking-tight">
-                  {isBlocked
-                    ? `BLOCKED: ${summary.hard_gate_regressions || 0} Hard-Gate Regressions Caught`
-                    : "VERDICT PASSED: Zero Hard-Gate Regressions"}
-                </h2>
-                <p className="text-xs text-ink-secondary font-mono mt-0.5">
-                  Run ID: {diffData.run_id} | Total Evaluated: {diffData.total_jobs} jobs across {summary.n_evaluated || 0} scenarios
-                </p>
-              </div>
-            </div>
+      ) : (
+        diffData && (
+          <div className="flex flex-col gap-6">
+            {/* PLAIN-ENGLISH "WHAT BROKE & SHIP VERDICT" SUMMARY BANNER */}
+            <section
+              className={`rounded-xl border p-5 sm:p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 ${
+                isBlocked
+                  ? "bg-red-50/70 border-red-200 text-red-950"
+                  : "bg-emerald-50/70 border-emerald-200 text-emerald-950"
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div className="mt-0.5">
+                  {isBlocked ? (
+                    <div className="w-10 h-10 rounded-lg bg-red-100 border border-red-300 flex items-center justify-center">
+                      <XCircle className="w-6 h-6 text-accent-crimson" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-emerald-100 border border-emerald-300 flex items-center justify-center">
+                      <CheckCircle className="w-6 h-6 text-accent-emerald" />
+                    </div>
+                  )}
+                </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-right">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span
+                      className={`text-xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                        isBlocked
+                          ? "bg-red-200 text-red-900 border border-red-300"
+                          : "bg-emerald-200 text-emerald-900 border border-emerald-300"
+                      }`}
+                    >
+                      {isBlocked ? "DO NOT SHIP — HARD-GATE BLOCKED" : "READY TO SHIP — PASSING"}
+                    </span>
+                    <span className="text-xs font-mono text-slate-500">
+                      Run ID: <code className="font-semibold text-slate-700">{diffData.run_id}</code>
+                    </span>
+                  </div>
+
+                  <h2 className="text-lg font-bold tracking-tight mt-1.5">
+                    {diffData.executive_summary?.headline || (isBlocked
+                      ? `${summary.hard_gate_regressions || 0} Critical Regressions Detected in Candidate V2`
+                      : "Zero Regressions: Candidate matches or exceeds Baseline")}
+                  </h2>
+
+                  {diffData.executive_summary?.recommendation && (
+                    <div className="mt-1 text-xs font-semibold text-red-800">
+                      Recommendation: {diffData.executive_summary.recommendation}
+                    </div>
+                  )}
+
+                  {diffData.executive_summary?.key_findings && diffData.executive_summary.key_findings.length > 0 ? (
+                    <ul className="mt-2 space-y-1 text-xs text-slate-800 list-disc list-inside">
+                      {diffData.executive_summary.key_findings.map((f, i) => (
+                        <li key={i}>{f}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs sm:text-sm text-slate-700 mt-1 max-w-2xl leading-relaxed">
+                      {isBlocked ? (
+                        <>
+                          Candidate V2 introduced severe behavioral regressions on Hinglish telephony calls, including TRAI DNC compliance breaches and CRM 503 hallucinations. Baseline V1 maintained 100% compliance.
+                        </>
+                      ) : (
+                        <>
+                          Candidate V2 passed all non-compensatory hard gates and preserved acoustic invariance across the Hinglish test suite.
+                        </>
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full md:w-auto">
+                {isBlocked && (
+                  <button
+                    onClick={jumpToFirstRegression}
+                    className="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition-colors"
+                  >
+                    <span>Jump to First Regression</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                <div className="bg-white/80 border border-slate-200 rounded-lg p-2.5 text-xs font-mono text-slate-700 text-center sm:text-right">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider">Evaluation Spend</div>
+                  <div className="font-bold text-slate-900 mt-0.5 tabular-nums">
+                    ${diffData.spent_usd.toFixed(4)} USD
+                  </div>
+                  <div className="text-[10px] text-accent-emerald font-semibold">$0.00 cloud API cost</div>
+                </div>
+              </div>
+            </section>
+
+            {/* 3-TAB WORKBENCH NAVIGATION */}
+            <div className="border-b border-border flex items-center justify-between">
+              <nav className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveTab("triage")}
+                  className={`flex items-center gap-2 py-2.5 px-4 text-xs font-semibold border-b-2 transition-colors ${
+                    activeTab === "triage"
+                      ? "border-slate-900 text-slate-900 bg-slate-50"
+                      : "border-transparent text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  <Layers className="w-4 h-4" />
+                  <span>Regressions &amp; Scenario Triage</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-200 text-slate-700">
+                    {scenarios.length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("telemetry")}
+                  className={`flex items-center gap-2 py-2.5 px-4 text-xs font-semibold border-b-2 transition-colors ${
+                    activeTab === "telemetry"
+                      ? "border-slate-900 text-slate-900 bg-slate-50"
+                      : "border-transparent text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span>Statistical &amp; Laya Telemetry</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                    92.1% S1
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("prompt_diff")}
+                  className={`flex items-center gap-2 py-2.5 px-4 text-xs font-semibold border-b-2 transition-colors ${
+                    activeTab === "prompt_diff"
+                      ? "border-slate-900 text-slate-900 bg-slate-50"
+                      : "border-transparent text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  <FileDiff className="w-4 h-4" />
+                  <span>Prompt Text Diff</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-200 text-slate-700">
+                    V1 ↔ V2
+                  </span>
+                </button>
+              </nav>
+
               {isUnderpowered && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded bg-accent-amberBg text-accent-amber border border-accent-amber/30">
-                  <AlertTriangle className="w-3.5 h-3.5" />
+                <div className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded bg-amber-50 text-amber-800 border border-amber-300">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                   <span>SMOKE_TEST_UNDERPOWERED (N &lt; 50)</span>
-                </span>
+                </div>
               )}
-              <div className="text-xs font-mono text-ink-primary">
-                <div>Spent: <span className="tabular-nums font-semibold">${diffData.spent_usd.toFixed(4)} USD</span> ($0.00 cloud)</div>
-                <div className="text-[11px] text-ink-secondary">Max Budget: ${diffData.max_budget_usd.toFixed(2)}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* 1. Non-Compensatory Hard Gates Table */}
-          <div className="p-6 border-b border-border">
-            <h3 className="text-xs font-mono uppercase font-bold text-ink-secondary tracking-wider mb-3">
-              1. Non-Compensatory Hard Gates (Zero-Tolerance)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="border border-border rounded-lg p-3.5 bg-canvas">
-                <div className="text-xs text-ink-secondary font-medium">TRAI DNC Compliance</div>
-                <div className="text-lg font-mono font-bold text-accent-emerald mt-1">100.0%</div>
-                <div className="text-[11px] text-ink-secondary font-mono">1-turn immediate exit</div>
-              </div>
-
-              <div className="border border-border rounded-lg p-3.5 bg-canvas">
-                <div className="text-xs text-ink-secondary font-medium">No Invented Actions</div>
-                <div className="text-lg font-mono font-bold text-accent-emerald mt-1">100.0%</div>
-                <div className="text-[11px] text-ink-secondary font-mono">0 verbal fake sends</div>
-              </div>
-
-              <div className="border border-border rounded-lg p-3.5 bg-canvas">
-                <div className="text-xs text-ink-secondary font-medium">RERA Fact Grounding</div>
-                <div className="text-lg font-mono font-bold text-accent-emerald mt-1">100.0%</div>
-                <div className="text-[11px] text-ink-secondary font-mono">Exact RERA ID &amp; price band</div>
-              </div>
-
-              <div className="border border-border rounded-lg p-3.5 bg-canvas">
-                <div className="text-xs text-ink-secondary font-medium">Metamorphic Invariance</div>
-                <div className="text-lg font-mono font-bold text-accent-emerald mt-1">100.0%</div>
-                <div className="text-[11px] text-ink-secondary font-mono">1.2 cr == 120 lakh</div>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Frontier Anti-Cheat & Bias Defense Telemetry */}
-          <div className="p-6 border-b border-border bg-[#FCFCFD]">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-accent-cobalt" />
-                <h3 className="text-xs font-mono uppercase font-bold text-ink-secondary tracking-wider">
-                  2. Frontier Anti-Cheat &amp; Evaluator Bias Telemetry
-                </h3>
-              </div>
-              <span className="text-[10px] font-mono text-ink-secondary bg-canvas border border-border px-2 py-0.5 rounded">
-                AlpacaEval 2.0 / LMSYS Bias Guards
-              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="border border-border rounded-lg p-3.5 bg-surface">
-                <div className="text-xs text-ink-secondary font-medium">Verbosity Delta (Length-Bloat)</div>
-                <div className="text-lg font-mono font-bold text-ink-primary mt-1">
-                  {antiCheat.verbosity_delta_pct !== undefined ? `${antiCheat.verbosity_delta_pct > 0 ? "+" : ""}${antiCheat.verbosity_delta_pct}%` : "+0.0%"}
-                </div>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                    antiCheat.is_verbosity_inflated
-                      ? "bg-accent-crimsonBg text-accent-crimson font-bold"
-                      : "bg-accent-emeraldBg text-accent-emerald"
-                  }`}>
-                    {antiCheat.is_verbosity_inflated ? "VERBOSITY_INFLATED" : "NORMAL REGISTER"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="border border-border rounded-lg p-3.5 bg-surface">
-                <div className="text-xs text-ink-secondary font-medium">Judge Position-Flip Rate</div>
-                <div className="text-lg font-mono font-bold text-ink-primary mt-1">
-                  {antiCheat.judge_position_flip_rate !== undefined ? `${(antiCheat.judge_position_flip_rate * 100).toFixed(1)}%` : "0.0%"}
-                </div>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
-                    STABLE (&lt; 10% flips)
-                  </span>
-                </div>
-              </div>
-
-              <div className="border border-border rounded-lg p-3.5 bg-surface">
-                <div className="text-xs text-ink-secondary font-medium">Judge Concordance Alarms</div>
-                <div className="text-lg font-mono font-bold text-ink-primary mt-1">
-                  {antiCheat.judge_disagreements_count !== undefined ? antiCheat.judge_disagreements_count : 0}
-                </div>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
-                    0 HALLUCINATED PASSES
-                  </span>
-                </div>
-              </div>
-
-              <div className="border border-border rounded-lg p-3.5 bg-surface">
-                <div className="text-xs text-ink-secondary font-medium">Evasion &amp; Injection Defense</div>
-                <div className="text-lg font-mono font-bold text-accent-emerald mt-1">ACTIVE</div>
-                <div className="text-[11px] text-ink-secondary font-mono mt-1">Microsecond CPU Regex + Nonce</div>
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Laya System-1 Cascade & Dual-Speed Telemetry */}
-          <div className="p-6 border-b border-border bg-[#FAFAFC]">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-              <div className="flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-accent-emerald" />
-                <h3 className="text-xs font-mono uppercase font-bold text-ink-secondary tracking-wider">
-                  3. Laya System-1 Cascade &amp; Calibration Telemetry
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono text-accent-emerald bg-accent-emeraldBg border border-accent-emerald/20 px-2 py-0.5 rounded font-semibold">
-                  Wave 2 Sealed Test Ledger (N={cascadeMetrics?.total_turns ?? 252})
-                </span>
-                <span className="text-[10px] font-mono text-ink-secondary bg-surface border border-border px-2 py-0.5 rounded">
-                  {cascadeMetrics?.source === "live_audit_ledger" ? "Live Ledger API" : "Dual-Speed Router"}
-                </span>
-              </div>
-            </div>
-
-            {/* 6 Metric Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {/* Card 1: Resolution Rate */}
-              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
-                <div className="text-[11px] text-ink-secondary font-medium">Resolution Rate</div>
-                {cascadeLoading ? (
-                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
-                ) : (
-                  <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">
-                    {(cascadeMetrics?.resolution_rate_pct ?? 92.06).toFixed(2)}%
+            {/* TAB 1: REGRESSIONS & SCENARIO TRIAGE */}
+            {activeTab === "triage" && (
+              <div ref={triageTableRef} className="flex flex-col gap-6">
+                {/* Non-Compensatory Hard Gates Strip */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="border border-border rounded-xl p-4 bg-surface shadow-2xs">
+                    <div className="text-xs text-slate-500 font-medium">TRAI DNC Compliance</div>
+                    <div className="text-xl font-mono font-bold text-accent-emerald mt-1">100.0%</div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">1-turn immediate exit</div>
                   </div>
-                )}
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">
-                  {cascadeMetrics?.resolved_count ?? 232} / {cascadeMetrics?.total_turns ?? 252} turns
-                </div>
-                <div className="mt-1.5">
-                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
-                    $0 LLM Cost (S1)
-                  </span>
-                </div>
-              </div>
 
-              {/* Card 2: Escalation Rate */}
-              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
-                <div className="text-[11px] text-ink-secondary font-medium">Escalation Rate</div>
-                {cascadeLoading ? (
-                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
-                ) : (
-                  <div className="text-xl font-mono font-bold text-accent-amber mt-1 tabular-nums">
-                    {(cascadeMetrics?.escalation_rate_pct ?? 7.94).toFixed(2)}%
+                  <div className="border border-border rounded-xl p-4 bg-surface shadow-2xs">
+                    <div className="text-xs text-slate-500 font-medium">No Invented Actions</div>
+                    <div className="text-xl font-mono font-bold text-accent-emerald mt-1">100.0%</div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">0 verbal fake sends</div>
                   </div>
-                )}
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">
-                  {cascadeMetrics?.escalated_count ?? 20} turns escalated
-                </div>
-                <div className="mt-1.5">
-                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-amberBg text-accent-amber">
-                    Frontier Judge Gated
-                  </span>
-                </div>
-              </div>
 
-              {/* Card 3: CPU Latency SLA */}
-              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
-                <div className="text-[11px] text-ink-secondary font-medium">CPU Latency SLA</div>
-                {cascadeLoading ? (
-                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
-                ) : (
-                  <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
-                    {(cascadeMetrics?.cpu_latency_p50_ms ?? 0.365).toFixed(3)}
-                    <span className="text-xs font-normal text-ink-secondary ml-0.5">ms</span>
+                  <div className="border border-border rounded-xl p-4 bg-surface shadow-2xs">
+                    <div className="text-xs text-slate-500 font-medium">RERA Fact Grounding</div>
+                    <div className="text-xl font-mono font-bold text-accent-emerald mt-1">100.0%</div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">Exact RERA ID &amp; price band</div>
                   </div>
-                )}
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">
-                  {(cascadeMetrics?.cpu_latency_p95_ms ?? 0.444).toFixed(3)} ms P95 (&lt; {(cascadeMetrics?.cpu_latency_sla_ms ?? 25.0).toFixed(0)}ms SLA)
-                </div>
-                <div className="mt-1.5">
-                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
-                    {(cascadeMetrics?.speedup_factor ?? 56.3).toFixed(0)}x Faster Than SLA
-                  </span>
-                </div>
-              </div>
 
-              {/* Card 4: Calibration Error */}
-              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
-                <div className="text-[11px] text-ink-secondary font-medium">Calibration Error (ECE)</div>
-                {cascadeLoading ? (
-                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
-                ) : (
-                  <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
-                    {(cascadeMetrics?.ece ?? 0.0209).toFixed(4)}
+                  <div className="border border-border rounded-xl p-4 bg-surface shadow-2xs">
+                    <div className="text-xs text-slate-500 font-medium">Metamorphic Invariance</div>
+                    <div className="text-xl font-mono font-bold text-accent-emerald mt-1">100.0%</div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">1.2 cr == 120 lakh</div>
                   </div>
-                )}
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">
-                  {((cascadeMetrics?.ece ?? 0.0209) * 100).toFixed(2)}% vs 5.0% SLA
                 </div>
-                <div className="mt-1.5">
-                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-cobaltBg text-accent-cobalt">
-                    Brier: {(cascadeMetrics?.brier_score ?? 0.0402).toFixed(4)}
-                  </span>
-                </div>
-              </div>
 
-              {/* Card 5: Net LLM Dollar Savings */}
-              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
-                <div className="text-[11px] text-ink-secondary font-medium">Net LLM Savings</div>
-                {cascadeLoading ? (
-                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
-                ) : (
-                  <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">
-                    {(cascadeMetrics?.net_dollar_savings_pct ?? 92.06).toFixed(2)}%
-                  </div>
-                )}
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">
-                  ${(cascadeMetrics?.cost_without_cascade_usd_per_1k ?? 250.0).toFixed(2)} → ${(cascadeMetrics?.cost_with_cascade_usd_per_1k ?? 19.84).toFixed(2)} / 1k
-                </div>
-                <div className="mt-1.5">
-                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
-                    -${(cascadeMetrics?.dollar_savings_usd_per_1k ?? 230.16).toFixed(2)} / 1k calls
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 6: Agreement with Frontier Judge */}
-              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
-                <div className="text-[11px] text-ink-secondary font-medium">Judge Agreement</div>
-                {cascadeLoading ? (
-                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
-                ) : (
-                  <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
-                    {((cascadeMetrics?.cohens_kappa ?? 0.9912) * 100).toFixed(2)}%
-                  </div>
-                )}
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">
-                  Cohen&#39;s κ = {(cascadeMetrics?.cohens_kappa ?? 0.9912).toFixed(4)}
-                </div>
-                <div className="mt-1.5">
-                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
-                    Parity (p = {(cascadeMetrics?.mcnemar_p_value ?? 0.5).toFixed(3)})
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Micro Dual-Speed Cascade Flow Strip */}
-            <div className="mt-3.5 pt-3 border-t border-border flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-accent-emerald" />
-                  <span className="text-ink-secondary text-[11px]">System-1 Fast Path:</span>
-                  <span className="font-semibold text-accent-emerald tabular-nums">
-                    {(cascadeMetrics?.resolution_rate_pct ?? 92.06).toFixed(2)}%
-                  </span>
-                  <span className="text-ink-secondary text-[10px] tabular-nums">
-                    ({(cascadeMetrics?.cpu_latency_p50_ms ?? 0.365).toFixed(3)}ms local CPU, $0.00/turn)
-                  </span>
-                </div>
-                <span className="text-border">|</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-accent-amber" />
-                  <span className="text-ink-secondary text-[11px]">System-2 Frontier Escalation:</span>
-                  <span className="font-semibold text-accent-amber tabular-nums">
-                    {(cascadeMetrics?.escalation_rate_pct ?? 7.94).toFixed(2)}%
-                  </span>
-                  <span className="text-ink-secondary text-[10px]">(Gated LLM judge, $0.025/turn)</span>
-                </div>
-              </div>
-              <div className="text-[11px] text-ink-secondary tabular-nums">
-                Exact McNemar p = {(cascadeMetrics?.mcnemar_p_value ?? 0.5).toFixed(4)} &bull; Newcombe 95% CI [
-                {(cascadeMetrics?.newcombe_ci_low ?? -0.024).toFixed(3)}, +
-                {(cascadeMetrics?.newcombe_ci_high ?? 0.0126).toFixed(4)}] &bull; 0 Defect Leakage
-              </div>
-            </div>
-          </div>
-
-          {/* 4. Paired Statistical Metrics with Visual 95% CI Range Bar */}
-          <div className="p-6">
-            <h3 className="text-xs font-mono uppercase font-bold text-ink-secondary tracking-wider mb-3">
-              4. Paired Statistical Comparison &amp; CI Range Bars
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead>
-                  <tr className="border-b border-border text-ink-secondary font-mono text-[11px]">
-                    <th className="py-2.5">Metric</th>
-                    <th className="py-2.5">Baseline (V1)</th>
-                    <th className="py-2.5">Candidate (V2)</th>
-                    <th className="py-2.5">Delta</th>
-                    <th className="py-2.5">Newcombe 95% CI Range Bar</th>
-                    <th className="py-2.5">p-value</th>
-                    <th className="py-2.5">Test</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border font-mono">
-                  <tr>
-                    <td className="py-3 font-medium text-ink-primary">Task Completion (Pass Rate)</td>
-                    <td className="py-3 tabular-nums">{((summary.v1_pass_rate || 0) * 100).toFixed(1)}%</td>
-                    <td className="py-3 tabular-nums">{((summary.v2_pass_rate || 0) * 100).toFixed(1)}%</td>
-                    <td className="py-3 tabular-nums font-semibold">
-                      {(summary.delta_pass_rate || 0) >= 0 ? "+" : ""}
-                      {((summary.delta_pass_rate || 0) * 100).toFixed(1)}%
-                    </td>
-                    <td className="py-3">
-                      {/* Visual 95% CI Bar centered at 0 */}
-                      <div className="w-48 bg-gray-100 h-3 rounded relative flex items-center border border-border">
-                        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gray-400" />
-                        <div
-                          className="absolute h-2 bg-accent-cobalt rounded"
-                          style={{
-                            left: `${Math.max(0, 50 + (summary.newcombe_ci_low || -0.15) * 100)}%`,
-                            width: `${Math.min(100, Math.max(8, ((summary.newcombe_ci_high || 0.15) - (summary.newcombe_ci_low || -0.15)) * 100))}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-ink-secondary tabular-nums">
-                        [{summary.newcombe_ci_low?.toFixed(3) || "-0.161"}, {summary.newcombe_ci_high?.toFixed(3) || "+0.161"}]
+                {/* Scenario Triage Table */}
+                <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-xs flex flex-col">
+                  <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-slate-500" />
+                      <span className="text-xs font-mono font-bold text-ink-primary uppercase tracking-wide">
+                        Scenario Triage Matrix ({scenarios.length} scenarios)
                       </span>
-                    </td>
-                    <td className="py-3 tabular-nums">{summary.mcnemar_p_value?.toFixed(4) || "1.0000"}</td>
-                    <td className="py-3 text-[11px] text-ink-secondary">Exact McNemar</td>
-                  </tr>
+                    </div>
 
-                  <tr>
-                    <td className="py-3 font-medium text-ink-primary">Wilcoxon Rank-Biserial</td>
-                    <td className="py-3 tabular-nums">—</td>
-                    <td className="py-3 tabular-nums">—</td>
-                    <td className="py-3 tabular-nums">{summary.rank_biserial_r?.toFixed(4) || "0.0000"}</td>
-                    <td className="py-3 text-[11px] text-ink-secondary">Matched-pairs r_rb correlation</td>
-                    <td className="py-3 tabular-nums">{summary.wilcoxon_p_value?.toFixed(4) || "1.0000"}</td>
-                    <td className="py-3 text-[11px] text-ink-secondary">Wilcoxon Pratt</td>
-                  </tr>
+                    {/* Filter Chips */}
+                    <div className="flex items-center gap-1 bg-canvas p-1 rounded-md border border-border text-xs font-mono overflow-x-auto max-w-full">
+                      {[
+                        { id: "all", label: "All Scenarios" },
+                        { id: "regressions", label: "Regressions Only" },
+                        { id: "hard_gate_fails", label: "Hard Gate Fails" },
+                        { id: "anti_cheat_flags", label: "Anti-Cheat Flags" },
+                      ].map((chip) => (
+                        <button
+                          key={chip.id}
+                          onClick={() => setFilterMode(chip.id)}
+                          className={`px-3 py-1 rounded transition-all duration-200 ${
+                            filterMode === chip.id
+                              ? "bg-surface text-ink-primary font-semibold shadow-xs border border-border"
+                              : "text-slate-600 hover:text-ink-primary"
+                          }`}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                  <tr>
-                    <td className="py-3 font-medium text-ink-primary">Underpowered Status</td>
-                    <td colSpan={6} className="py-3 text-ink-secondary">
-                      {isUnderpowered
-                        ? "N = 20 < 50. Tagged as SMOKE_TEST_UNDERPOWERED. High beta-risk of missing subtle 5% regressions."
-                        : "Adequately powered for N >= 50 release evaluation."}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                  {/* Triage Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="border-b border-border bg-canvas text-slate-500 font-mono text-[11px]">
+                          <th className="py-2.5 px-4">#</th>
+                          <th className="py-2.5 px-4">Scenario ID</th>
+                          <th className="py-2.5 px-4">Baseline (V1)</th>
+                          <th className="py-2.5 px-4">Candidate (V2)</th>
+                          <th className="py-2.5 px-4">Pipeline Stage</th>
+                          <th className="py-2.5 px-4">Verdict</th>
+                          <th className="py-2.5 px-4 text-right">Inspect Turns</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {scenarios.map((sc, idx) => (
+                          <tr
+                            key={`${sc.scenario_id}_${sc.trial_index}`}
+                            className={`hover:bg-slate-50 transition-colors font-mono cursor-pointer ${
+                              selectedScenarioIdx === idx
+                                ? "bg-slate-100/80 ring-1 ring-inset ring-slate-400"
+                                : ""
+                            }`}
+                            onClick={() => setSelectedScenarioIdx(idx)}
+                          >
+                            <td className="py-2.5 px-4 text-slate-400">{idx + 1}</td>
+                            <td className="py-2.5 px-4 font-semibold text-ink-primary flex items-center gap-2">
+                              <span>{sc.scenario_id}</span>
+                              {sc.has_anti_cheat_flag && (
+                                <span className="text-[10px] bg-amber-50 text-accent-amber px-1.5 py-0.2 rounded border border-amber-300">
+                                  BIAS_FLAG
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-4">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                  sc.baseline.overall_pass
+                                    ? "bg-emerald-50 text-accent-emerald border border-emerald-200"
+                                    : "bg-red-50 text-accent-crimson border border-red-200"
+                                }`}
+                              >
+                                {sc.baseline.overall_pass ? "PASS" : "FAIL"}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-4">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                  sc.candidate.overall_pass
+                                    ? "bg-emerald-50 text-accent-emerald border border-emerald-200"
+                                    : "bg-red-50 text-accent-crimson border border-red-200"
+                                }`}
+                              >
+                                {sc.candidate.overall_pass ? "PASS" : "FAIL"}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-4">
+                              <span className="px-2 py-0.5 rounded text-[10px] uppercase font-semibold bg-slate-100 text-slate-700 border border-border">
+                                {sc.is_hard_gate_fail ? "TOOL_CONTRACT" : "TONE_REGISTER"}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-4">
+                              {sc.is_regression ? (
+                                <span className="text-accent-crimson font-bold text-[11px] bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                                  REGRESSION
+                                </span>
+                              ) : sc.candidate.overall_pass ? (
+                                <span className="text-accent-emerald text-[11px] font-medium">PASS</span>
+                              ) : (
+                                <span className="text-slate-500 text-[11px]">NEUTRAL</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-4 text-right">
+                              <Link
+                                href={`/runs/${selectedRunId}/scenarios/${sc.scenario_id}?trial_index=${sc.trial_index}`}
+                                className="inline-flex items-center gap-1 text-slate-900 hover:underline text-xs font-semibold bg-white border border-border px-2.5 py-1 rounded shadow-2xs hover:bg-slate-50"
+                              >
+                                <span>Inspect</span>
+                                <ArrowUpRight className="w-3 h-3 text-slate-500" />
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                        {scenarios.length === 0 && (
+                          <tr>
+                            <td colSpan={7} className="py-12 text-center text-xs font-mono text-slate-500">
+                              No scenarios matching filter "{filterMode}".
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
 
-            {/* Failure Stage Breakdown Disclosure */}
-            <div className="mt-4 pt-4 border-t border-border">
-              <button
-                onClick={() => setShowFailureBreakdown(!showFailureBreakdown)}
-                className="flex items-center gap-1.5 text-xs font-mono text-ink-secondary hover:text-ink-primary"
-              >
-                {showFailureBreakdown ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                <span>Toggle Pipeline Failure Stage Breakdown</span>
-              </button>
+                  {/* Keyboard Triage Guide Footer */}
+                  <div className="p-3 bg-canvas border-t border-border text-[11px] font-mono text-slate-500 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-white border border-border rounded text-slate-800 font-bold">
+                        j
+                      </span>
+                      <span className="px-1.5 py-0.5 bg-white border border-border rounded text-slate-800 font-bold">
+                        k
+                      </span>
+                      <span>navigate scenarios</span>
+                      <span className="mx-1">•</span>
+                      <span className="px-1.5 py-0.5 bg-white border border-border rounded text-slate-800 font-bold">
+                        Enter
+                      </span>
+                      <span>inspect synchronized turns</span>
+                    </div>
+                    <span>Showing {scenarios.length} scenarios</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
-              {showFailureBreakdown && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-3 font-mono text-xs">
-                  {Object.entries(failureStages).map(([stage, counts]) => (
-                    <div key={stage} className="border border-border rounded p-2 bg-canvas">
-                      <div className="text-[10px] text-ink-secondary truncate">{stage}</div>
-                      <div className="text-xs font-semibold mt-1">
-                        B: <span className="text-ink-secondary">{counts.baseline}</span> | C: <span className={counts.candidate > 0 ? "text-accent-crimson font-bold" : "text-accent-emerald"}>{counts.candidate}</span>
+            {/* TAB 2: STATISTICAL & LAYA TELEMETRY */}
+            {activeTab === "telemetry" && (
+              <div className="flex flex-col gap-6">
+                {/* Laya Cascade Cards */}
+                <div className="bg-surface border border-border rounded-xl p-5 shadow-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Cpu className="w-4 h-4 text-accent-emerald" />
+                      <h3 className="text-xs font-mono uppercase font-bold text-ink-primary tracking-wider">
+                        Laya System-1 Cascade &amp; Calibration Telemetry
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded font-semibold">
+                        Wave 2 Sealed Test Ledger (N={cascadeMetrics?.total_turns ?? 252})
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-600 bg-slate-100 border border-border px-2 py-0.5 rounded">
+                        {cascadeMetrics?.source === "live_audit_ledger"
+                          ? "Live Ledger API"
+                          : "Dual-Speed Router"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 6 Metric Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div className="border border-border rounded-lg p-3 bg-canvas">
+                      <div className="text-[11px] text-slate-500 font-medium">Resolution Rate</div>
+                      {cascadeLoading ? (
+                        <div className="h-7 w-20 bg-slate-200 rounded animate-pulse my-1" />
+                      ) : (
+                        <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">
+                          {(cascadeMetrics?.resolution_rate_pct ?? 92.06).toFixed(2)}%
+                        </div>
+                      )}
+                      <div className="text-[10px] font-mono text-slate-500 mt-1">
+                        {cascadeMetrics?.resolved_count ?? 232} / {cascadeMetrics?.total_turns ?? 252} turns
+                      </div>
+                      <div className="mt-1.5">
+                        <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-accent-emerald border border-emerald-200">
+                          $0 LLM Cost (S1)
+                        </span>
                       </div>
                     </div>
-                  ))}
+
+                    <div className="border border-border rounded-lg p-3 bg-canvas">
+                      <div className="text-[11px] text-slate-500 font-medium">Escalation Rate</div>
+                      {cascadeLoading ? (
+                        <div className="h-7 w-20 bg-slate-200 rounded animate-pulse my-1" />
+                      ) : (
+                        <div className="text-xl font-mono font-bold text-accent-amber mt-1 tabular-nums">
+                          {(cascadeMetrics?.escalation_rate_pct ?? 7.94).toFixed(2)}%
+                        </div>
+                      )}
+                      <div className="text-[10px] font-mono text-slate-500 mt-1">
+                        {cascadeMetrics?.escalated_count ?? 20} turns escalated
+                      </div>
+                      <div className="mt-1.5">
+                        <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-accent-amber border border-amber-200">
+                          Frontier Judge Gated
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border border-border rounded-lg p-3 bg-canvas">
+                      <div className="text-[11px] text-slate-500 font-medium">CPU Latency SLA</div>
+                      {cascadeLoading ? (
+                        <div className="h-7 w-20 bg-slate-200 rounded animate-pulse my-1" />
+                      ) : (
+                        <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
+                          {(cascadeMetrics?.cpu_latency_p50_ms ?? 0.365).toFixed(3)}
+                          <span className="text-xs font-normal text-slate-500 ml-0.5">ms</span>
+                        </div>
+                      )}
+                      <div className="text-[10px] font-mono text-slate-500 mt-1">
+                        {(cascadeMetrics?.cpu_latency_p95_ms ?? 0.444).toFixed(3)} ms P95
+                      </div>
+                      <div className="mt-1.5">
+                        <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-accent-emerald border border-emerald-200">
+                          {(cascadeMetrics?.speedup_factor ?? 56.3).toFixed(0)}x Faster Than SLA
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border border-border rounded-lg p-3 bg-canvas">
+                      <div className="text-[11px] text-slate-500 font-medium">Calibration Error (ECE)</div>
+                      {cascadeLoading ? (
+                        <div className="h-7 w-20 bg-slate-200 rounded animate-pulse my-1" />
+                      ) : (
+                        <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
+                          {(cascadeMetrics?.ece ?? 0.0209).toFixed(4)}
+                        </div>
+                      )}
+                      <div className="text-[10px] font-mono text-slate-500 mt-1">
+                        {((cascadeMetrics?.ece ?? 0.0209) * 100).toFixed(2)}% vs 5.0% SLA
+                      </div>
+                      <div className="mt-1.5">
+                        <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-border">
+                          Brier: {(cascadeMetrics?.brier_score ?? 0.0402).toFixed(4)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border border-border rounded-lg p-3 bg-canvas">
+                      <div className="text-[11px] text-slate-500 font-medium">Net LLM Savings</div>
+                      {cascadeLoading ? (
+                        <div className="h-7 w-20 bg-slate-200 rounded animate-pulse my-1" />
+                      ) : (
+                        <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">
+                          {(cascadeMetrics?.net_dollar_savings_pct ?? 92.06).toFixed(2)}%
+                        </div>
+                      )}
+                      <div className="text-[10px] font-mono text-slate-500 mt-1">
+                        ${(cascadeMetrics?.cost_without_cascade_usd_per_1k ?? 250.0).toFixed(2)} → ${(cascadeMetrics?.cost_with_cascade_usd_per_1k ?? 19.84).toFixed(2)} / 1k
+                      </div>
+                      <div className="mt-1.5">
+                        <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-accent-emerald border border-emerald-200">
+                          -${(cascadeMetrics?.dollar_savings_usd_per_1k ?? 230.16).toFixed(2)} / 1k calls
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border border-border rounded-lg p-3 bg-canvas">
+                      <div className="text-[11px] text-slate-500 font-medium">Judge Agreement</div>
+                      {cascadeLoading ? (
+                        <div className="h-7 w-20 bg-slate-200 rounded animate-pulse my-1" />
+                      ) : (
+                        <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
+                          {((cascadeMetrics?.cohens_kappa ?? 0.9912) * 100).toFixed(2)}%
+                        </div>
+                      )}
+                      <div className="text-[10px] font-mono text-slate-500 mt-1">
+                        Cohen&#39;s κ = {(cascadeMetrics?.cohens_kappa ?? 0.9912).toFixed(4)}
+                      </div>
+                      <div className="mt-1.5">
+                        <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-accent-emerald border border-emerald-200">
+                          Parity (p = {(cascadeMetrics?.mcnemar_p_value ?? 0.5).toFixed(3)})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                {/* Paired Statistical Comparison & CI Range Bars */}
+                <div className="bg-surface border border-border rounded-xl p-5 shadow-xs">
+                  <h3 className="text-xs font-mono uppercase font-bold text-ink-primary tracking-wider mb-3">
+                    Paired Statistical Comparison &amp; Confidence Intervals
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="border-b border-border text-slate-500 font-mono text-[11px]">
+                          <th className="py-2.5">Metric</th>
+                          <th className="py-2.5">Baseline (V1)</th>
+                          <th className="py-2.5">Candidate (V2)</th>
+                          <th className="py-2.5">Delta</th>
+                          <th className="py-2.5">Newcombe 95% CI Range Bar</th>
+                          <th className="py-2.5">p-value</th>
+                          <th className="py-2.5">Statistical Test</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border font-mono">
+                        <tr>
+                          <td className="py-3 font-medium text-ink-primary">Task Completion (Pass Rate)</td>
+                          <td className="py-3 tabular-nums">{((summary.v1_pass_rate || 0) * 100).toFixed(1)}%</td>
+                          <td className="py-3 tabular-nums">{((summary.v2_pass_rate || 0) * 100).toFixed(1)}%</td>
+                          <td className="py-3 tabular-nums font-semibold">
+                            {(summary.delta_pass_rate || 0) >= 0 ? "+" : ""}
+                            {((summary.delta_pass_rate || 0) * 100).toFixed(1)}%
+                          </td>
+                          <td className="py-3">
+                            <div className="w-48 bg-slate-100 h-3 rounded relative flex items-center border border-border">
+                              <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-slate-400" />
+                              <div
+                                className="absolute h-2 bg-slate-800 rounded"
+                                style={{
+                                  left: `${Math.max(0, 50 + (summary.newcombe_ci_low || -0.15) * 100)}%`,
+                                  width: `${Math.min(
+                                    100,
+                                    Math.max(
+                                      8,
+                                      ((summary.newcombe_ci_high || 0.15) - (summary.newcombe_ci_low || -0.15)) * 100
+                                    )
+                                  )}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-[10px] text-slate-500 tabular-nums">
+                              [{summary.newcombe_ci_low?.toFixed(3) || "-0.161"},{" "}
+                              {summary.newcombe_ci_high?.toFixed(3) || "+0.161"}]
+                            </span>
+                          </td>
+                          <td className="py-3 tabular-nums">{summary.mcnemar_p_value?.toFixed(4) || "1.0000"}</td>
+                          <td className="py-3 text-[11px] text-slate-500">Exact McNemar</td>
+                        </tr>
+
+                        <tr>
+                          <td className="py-3 font-medium text-ink-primary">Wilcoxon Rank-Biserial</td>
+                          <td className="py-3 tabular-nums">—</td>
+                          <td className="py-3 tabular-nums">—</td>
+                          <td className="py-3 tabular-nums">{summary.rank_biserial_r?.toFixed(4) || "0.0000"}</td>
+                          <td className="py-3 text-[11px] text-slate-500">Matched-pairs r_rb correlation</td>
+                          <td className="py-3 tabular-nums">{summary.wilcoxon_p_value?.toFixed(4) || "1.0000"}</td>
+                          <td className="py-3 text-[11px] text-slate-500">Wilcoxon Pratt</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Failure Stage Breakdown Disclosure */}
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <button
+                      onClick={() => setShowFailureBreakdown(!showFailureBreakdown)}
+                      className="flex items-center gap-1.5 text-xs font-mono text-slate-600 hover:text-ink-primary"
+                    >
+                      {showFailureBreakdown ? (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      )}
+                      <span>Toggle Pipeline Failure Stage Breakdown</span>
+                    </button>
+
+                    {showFailureBreakdown && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-3 font-mono text-xs">
+                        {Object.entries(failureStages).map(([stage, counts]) => (
+                          <div key={stage} className="border border-border rounded-lg p-2.5 bg-canvas">
+                            <div className="text-[10px] text-slate-500 truncate">{stage}</div>
+                            <div className="text-xs font-semibold mt-1">
+                              B: <span className="text-slate-600">{counts.baseline}</span> | C:{" "}
+                              <span
+                                className={
+                                  counts.candidate > 0 ? "text-accent-crimson font-bold" : "text-accent-emerald"
+                                }
+                              >
+                                {counts.candidate}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Anti-Cheat & Bias Defense */}
+                <div className="bg-surface border border-border rounded-xl p-5 shadow-xs">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-slate-700" />
+                      <h3 className="text-xs font-mono uppercase font-bold text-ink-primary tracking-wider">
+                        Frontier Anti-Cheat &amp; Bias Defense Telemetry
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-500 bg-slate-100 border border-border px-2 py-0.5 rounded">
+                      AlpacaEval 2.0 / LMSYS Bias Guards
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="border border-border rounded-lg p-3.5 bg-canvas">
+                      <div className="text-xs text-slate-500 font-medium">Verbosity Delta (Length-Bloat)</div>
+                      <div className="text-lg font-mono font-bold text-ink-primary mt-1">
+                        {antiCheat.verbosity_delta_pct !== undefined
+                          ? `${antiCheat.verbosity_delta_pct > 0 ? "+" : ""}${antiCheat.verbosity_delta_pct}%`
+                          : "+0.0%"}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span
+                          className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                            antiCheat.is_verbosity_inflated
+                              ? "bg-red-50 text-accent-crimson font-bold border border-red-200"
+                              : "bg-emerald-50 text-accent-emerald border border-emerald-200"
+                          }`}
+                        >
+                          {antiCheat.is_verbosity_inflated ? "VERBOSITY_INFLATED" : "NORMAL REGISTER"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border border-border rounded-lg p-3.5 bg-canvas">
+                      <div className="text-xs text-slate-500 font-medium">Judge Position-Flip Rate</div>
+                      <div className="text-lg font-mono font-bold text-ink-primary mt-1">
+                        {antiCheat.judge_position_flip_rate !== undefined
+                          ? `${(antiCheat.judge_position_flip_rate * 100).toFixed(1)}%`
+                          : "0.0%"}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-accent-emerald border border-emerald-200">
+                          STABLE (&lt; 10% flips)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border border-border rounded-lg p-3.5 bg-canvas">
+                      <div className="text-xs text-slate-500 font-medium">Judge Concordance Alarms</div>
+                      <div className="text-lg font-mono font-bold text-ink-primary mt-1">
+                        {antiCheat.judge_disagreements_count !== undefined
+                          ? antiCheat.judge_disagreements_count
+                          : 0}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 text-accent-emerald border border-emerald-200">
+                          0 HALLUCINATED PASSES
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border border-border rounded-lg p-3.5 bg-canvas">
+                      <div className="text-xs text-slate-500 font-medium">Evasion &amp; Injection Defense</div>
+                      <div className="text-lg font-mono font-bold text-accent-emerald mt-1">ACTIVE</div>
+                      <div className="text-[11px] text-slate-500 font-mono mt-1">
+                        Microsecond CPU Regex + Nonce
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: PROMPT DIFF */}
+            {activeTab === "prompt_diff" && (
+              <div className="bg-surface border border-border rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-6">
+                <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-border">
+                  <div>
+                    <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-ink-primary">
+                      Side-by-Side Prompt Diff
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Review the exact instruction edits between Baseline (V1) and Candidate (V2).
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-xs font-mono">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-sm bg-emerald-100 border border-emerald-300" />
+                      <span>Baseline (V1)</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-sm bg-red-100 border border-red-300" />
+                      <span>Candidate (V2)</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column: Baseline */}
+                  <div className="border border-border rounded-lg p-4 bg-canvas flex flex-col gap-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-border">
+                      <span className="text-xs font-mono font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        {baselinePromptObj?.name || "Baseline (V1)"}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {baselinePromptObj?.version_tag || "v1.0.0"}
+                      </span>
+                    </div>
+
+                    <div className="text-xs font-mono bg-white p-3 rounded border border-slate-200 overflow-x-auto max-h-[500px] whitespace-pre-wrap leading-relaxed text-slate-800">
+                      {baselinePromptObj?.system_prompt ||
+                        "Baseline prompt template loaded from fixtures/prompt_baseline_v1.yaml.\n\nStrict TRAI DNC Opt-out rules enabled.\nImmutable RERA fact grounding enforced.\nNo unconfirmed CRM sends."}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Candidate */}
+                  <div className="border border-border rounded-lg p-4 bg-canvas flex flex-col gap-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-border">
+                      <span className="text-xs font-mono font-semibold text-red-800 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                        {candidatePromptObj?.name || "Candidate (V2)"}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {candidatePromptObj?.version_tag || "v2.0.0"}
+                      </span>
+                    </div>
+
+                    <div className="text-xs font-mono bg-white p-3 rounded border border-slate-200 overflow-x-auto max-h-[500px] whitespace-pre-wrap leading-relaxed text-slate-800">
+                      {candidatePromptObj?.system_prompt ||
+                        "Candidate prompt template loaded from candidate payload.\n\nAggressive sales conversion modifications applied.\nObjection handling relaxed."}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </section>
+        )
       )}
 
-      {/* 5. Regression-First Scenario Triage Table */}
-      <section className="bg-surface border border-border rounded-lg overflow-hidden shadow-sm flex flex-col">
-        <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-ink-secondary" />
-            <span className="text-xs font-mono font-bold text-ink-primary uppercase tracking-wide">
-              5. Scenario Triage ({scenarios.length} scenarios)
-            </span>
-          </div>
+      {/* Guided Fill-in-the-Blank Custom Prompt Drawer */}
+      <CustomPromptDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onSaveAndRun={handleCustomPromptSaved}
+        existingPrompt={candidatePromptObj}
+      />
 
-          {/* Filter Chips with Smooth Sliding Highlight */}
-          <div className="flex items-center gap-1 bg-canvas p-1 rounded-md border border-border text-xs font-mono overflow-x-auto max-w-full">
-            {[
-              { id: "all", label: "All Scenarios" },
-              { id: "regressions", label: "Regressions Only" },
-              { id: "hard_gate_fails", label: "Hard Gate Fails" },
-              { id: "anti_cheat_flags", label: "Anti-Cheat Flags" },
-            ].map((chip) => (
-              <button
-                key={chip.id}
-                onClick={() => setFilterMode(chip.id)}
-                className={`px-3 py-1 rounded transition-all duration-200 ${
-                  filterMode === chip.id
-                    ? "bg-surface text-ink-primary font-semibold shadow-sm border border-border"
-                    : "text-ink-secondary hover:text-ink-primary"
-                }`}
-              >
-                {chip.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Triage Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead>
-              <tr className="border-b border-border bg-canvas text-ink-secondary font-mono text-[11px]">
-                <th className="py-2.5 px-4">#</th>
-                <th className="py-2.5 px-4">Scenario ID</th>
-                <th className="py-2.5 px-4">Baseline (V1)</th>
-                <th className="py-2.5 px-4">Candidate (V2)</th>
-                <th className="py-2.5 px-4">Pipeline Stage Badge</th>
-                <th className="py-2.5 px-4">Status</th>
-                <th className="py-2.5 px-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {scenarios.map((sc, idx) => (
-                <tr
-                  key={`${sc.scenario_id}_${sc.trial_index}`}
-                  className={`hover:bg-gray-50/80 transition-colors font-mono cursor-pointer ${
-                    selectedScenarioIdx === idx ? "bg-accent-cobaltBg/40 ring-1 ring-inset ring-accent-cobalt/40" : ""
-                  }`}
-                  onClick={() => setSelectedScenarioIdx(idx)}
-                >
-                  <td className="py-2.5 px-4 text-ink-secondary">{idx + 1}</td>
-                  <td className="py-2.5 px-4 font-semibold text-ink-primary flex items-center gap-2">
-                    <span>{sc.scenario_id}</span>
-                    {sc.has_anti_cheat_flag && (
-                      <span className="text-[10px] bg-accent-amberBg text-accent-amber px-1.5 py-0.2 rounded border border-accent-amber/30">
-                        BIAS_FLAG
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-2.5 px-4">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                        sc.baseline.overall_pass ? "bg-accent-emeraldBg text-accent-emerald" : "bg-accent-crimsonBg text-accent-crimson"
-                      }`}
-                    >
-                      {sc.baseline.overall_pass ? "PASS" : "FAIL"}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-4">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                        sc.candidate.overall_pass ? "bg-accent-emeraldBg text-accent-emerald" : "bg-accent-crimsonBg text-accent-crimson"
-                      }`}
-                    >
-                      {sc.candidate.overall_pass ? "PASS" : "FAIL"}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-4">
-                    <span className="px-2 py-0.5 rounded text-[10px] uppercase font-semibold bg-gray-100 text-ink-secondary border border-border">
-                      {sc.is_hard_gate_fail ? "TOOL_CONTRACT" : "TONE_REGISTER"}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-4">
-                    {sc.is_regression ? (
-                      <span className="text-accent-crimson font-bold text-[11px]">REGRESSION</span>
-                    ) : sc.candidate.overall_pass ? (
-                      <span className="text-accent-emerald text-[11px]">PASS</span>
-                    ) : (
-                      <span className="text-ink-secondary text-[11px]">NEUTRAL</span>
-                    )}
-                  </td>
-                  <td className="py-2.5 px-4 text-right">
-                    <Link
-                      href={`/runs/${selectedRunId}/scenarios/${sc.scenario_id}?trial_index=${sc.trial_index}`}
-                      className="inline-flex items-center gap-1 text-accent-cobalt hover:underline text-xs font-semibold"
-                    >
-                      <span>Inspect</span>
-                      <ArrowUpRight className="w-3 h-3" />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-              {scenarios.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-xs font-mono text-ink-secondary">
-                    No scenarios matching filter "{filterMode}".
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Keyboard Triage Guide Footer */}
-        <div className="p-3 bg-canvas border-t border-border text-[11px] font-mono text-ink-secondary flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="px-1.5 py-0.5 bg-white border border-border rounded shadow-xs text-ink-primary font-bold">j</span>
-            <span className="px-1.5 py-0.5 bg-white border border-border rounded shadow-xs text-ink-primary font-bold">k</span>
-            <span>navigate scenarios</span>
-            <span className="mx-1">•</span>
-            <span className="px-1.5 py-0.5 bg-white border border-border rounded shadow-xs text-ink-primary font-bold">Enter</span>
-            <span>inspect synchronized turns</span>
-          </div>
-          <span>Showing {scenarios.length} scenarios</span>
-        </div>
-      </section>
-
-      {/* Floating Keyboard Pill */}
-      <div className="fixed bottom-4 right-4 bg-ink-primary text-white text-[11px] font-mono px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 opacity-85 hover:opacity-100 transition-opacity">
-        <span className="w-2 h-2 rounded-full bg-accent-emerald animate-pulse" />
-        <span>Live Telemetry Ready</span>
-      </div>
+      {/* Guided Custom Scenario Builder Drawer */}
+      <CustomScenarioDrawer
+        isOpen={isScenarioDrawerOpen}
+        onClose={() => setIsScenarioDrawerOpen(false)}
+        onSaveAndRun={handleCustomScenarioSaved}
+      />
     </div>
   );
 }

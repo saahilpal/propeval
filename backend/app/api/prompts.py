@@ -134,6 +134,14 @@ async def list_prompts(
     ]
 
 
+@router.get("/models/available")
+async def list_available_execution_models():
+    """List available execution models (Fast Local Engine, Ollama, etc.)."""
+    from backend.app.api.models import get_available_models
+
+    return await get_available_models()
+
+
 @router.get("/{prompt_id}", response_model=PromptResponse)
 async def get_prompt(
     prompt_id: str,
