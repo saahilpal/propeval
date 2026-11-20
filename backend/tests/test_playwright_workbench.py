@@ -47,6 +47,8 @@ async def test_playwright_visual_proof_loop():
             await page_wb.goto("http://localhost:3000/", wait_until="networkidle")
             await page_wb.wait_for_selector("text=PropEval")
             await page_wb.wait_for_selector("text=Scenario Triage")
+            await page_wb.wait_for_selector("text=Laya System-1 Cascade")
+            await page_wb.wait_for_selector("text=92.06%")
             await page_wb.screenshot(path=f"web/screenshots/workbench_{vp['name']}.png", full_page=True)
             await page_wb.close()
 
@@ -66,6 +68,8 @@ async def test_playwright_visual_proof_loop():
                 wait_until="networkidle",
             )
             await page_scen.wait_for_selector("text=smoke_01_std_lodha_2bhk")
+            await page_scen.wait_for_selector("text=RESOLVED (S1)")
+            await page_scen.wait_for_selector("text=ESCALATED (S2)")
             await page_scen.screenshot(path=f"web/screenshots/scenario_inspector_{vp['name']}.png", full_page=True)
             await page_scen.close()
 

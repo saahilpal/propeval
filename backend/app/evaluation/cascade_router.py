@@ -15,6 +15,7 @@ Routing Policy:
 from __future__ import annotations
 
 import math
+import re
 import time
 from pathlib import Path
 from typing import Any, Callable, Literal
@@ -79,6 +80,28 @@ class CascadeDecision(BaseModel):
     system_tier: Literal["SYSTEM_1", "SYSTEM_2"]
     status: Literal["SYSTEM1_RESOLVED", "ESCALATED_SYSTEM2"]
     system2_reasoning: str | None = None
+
+
+def detect_adversarial_ambiguity(text: str, task: str) -> tuple[bool, str | None]:
+    """Detect linguistic traps (interrogatives, negations, colloquial idioms) that require System-2 contextual reasoning."""
+    t = text.lower().strip()
+    if task == "dnc_refusal":
+        # Interrogative trap: agent/interlocutor asking whether to mark DNC
+        if re.search(r"\b(kya\s+(?:main|hum|aap)|shall\s+i|should\s+i|can\s+i)\b", t) and re.search(r"\b(dnc|do\s+not\s+call|call\s+mat|band\s+kar)\b", t):
+            return True, "Interrogative trap detected: agent question about DNC requires System-2 contextual resolution"
+    elif task == "objection_class":
+        # Negation trap: refuting or correcting a price figure ('yeh 1.2 cr nahi hai')
+        if re.search(r"\b(yeh|ye|this|it)\b.*\b(nahi\s+hai|not\s+true)\b", t) and re.search(r"\b(cr|crore|lakh|inr|price|budget)\b", t):
+            return True, "Negation trap detected: negated figure in objection context requires System-2 frontier reasoning"
+    elif task == "action_confirmation":
+        # Colloquial confirmation idioms ('done samjho', 'pakka done')
+        if re.search(r"\b(done\s+samjho|p[au]kka\s+samjho|confirm\s+samjho|done\s+hai|pakka\s+done)\b", t):
+            return True, "Colloquial verbal confirmation idiom detected: requires System-2 frontier reasoning"
+    elif task == "prompt_injection":
+        # Benign real-estate question containing injection trigger words
+        if re.search(r"\b(ignore|system\s+prompt|jailbreak)\b", t) and re.search(r"\b(bhk|flat|price|budget|visit|project)\b", t):
+            return True, "Mixed semantic intent in prompt injection boundary: requires System-2 frontier reasoning"
+    return False, None
 
 
 # ---------------------------------------------------------------------------
@@ -152,6 +175,8 @@ class CascadeRouter:
         probs, is_multiclass, classes = self._predict_head(text, task)
         latency_ms = (time.perf_counter() - t0) * 1000.0
 
+        trap_detected, trap_reason = detect_adversarial_ambiguity(text, task)
+
         if not is_multiclass:
             # Binary classification
             neg_class, pos_class = BINARY_TASK_CLASSES.get(
@@ -160,6 +185,25 @@ class CascadeRouter:
             p1 = float(probs[1])
             confidence = max(p1, 1.0 - p1)
             margin = abs(2.0 * p1 - 1.0)
+
+            # Adversarial trap detected: immediately escalate to frontier System-2
+            if trap_detected:
+                provisional_label = pos_class if p1 >= 0.5 else neg_class
+                return CascadeDecision(
+                    task=task,
+                    text=text,
+                    predicted_label=provisional_label,
+                    confidence=round(confidence, 4),
+                    margin=round(margin, 4),
+                    calibrated_probability=round(p1, 4),
+                    escalated_to_system2=True,
+                    escalation_reason=trap_reason,
+                    cost_usd=self.system2_cost_estimate,
+                    latency_ms=round(latency_ms, 3),
+                    system1_resolved=False,
+                    system_tier="SYSTEM_2",
+                    status="ESCALATED_SYSTEM2",
+                )
 
             # High confidence Pass / Defect: resolved by System-1
             if p1 >= self.tau_high:
@@ -231,6 +275,24 @@ class CascadeRouter:
                 classes[i]: round(float(probs[i]), 4)
                 for i in range(len(classes))
             }
+
+            # Adversarial trap detected: immediately escalate to frontier System-2
+            if trap_detected:
+                return CascadeDecision(
+                    task=task,
+                    text=text,
+                    predicted_label=predicted_label,
+                    confidence=round(top1_p, 4),
+                    margin=round(margin, 4),
+                    calibrated_probability=prob_dict,
+                    escalated_to_system2=True,
+                    escalation_reason=trap_reason,
+                    cost_usd=self.system2_cost_estimate,
+                    latency_ms=round(latency_ms, 3),
+                    system1_resolved=False,
+                    system_tier="SYSTEM_2",
+                    status="ESCALATED_SYSTEM2",
+                )
 
             if top1_p >= self.tau_high or margin >= self.margin_threshold:
                 return CascadeDecision(

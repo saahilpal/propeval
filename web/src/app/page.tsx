@@ -31,6 +31,7 @@ import {
   ChevronRight,
   RefreshCw,
   Terminal,
+  Cpu,
 } from "lucide-react";
 
 export default function WorkbenchPage() {
@@ -498,10 +499,129 @@ export default function WorkbenchPage() {
             </div>
           </div>
 
-          {/* 3. Paired Statistical Metrics with Visual 95% CI Range Bar */}
+          {/* 3. Laya System-1 Cascade & Dual-Speed Telemetry */}
+          <div className="p-6 border-b border-border bg-[#FAFAFC]">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-accent-emerald" />
+                <h3 className="text-xs font-mono uppercase font-bold text-ink-secondary tracking-wider">
+                  3. Laya System-1 Cascade &amp; Calibration Telemetry
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-accent-emerald bg-accent-emeraldBg border border-accent-emerald/20 px-2 py-0.5 rounded font-semibold">
+                  Wave 2 Sealed Test Ledger (N=252)
+                </span>
+                <span className="text-[10px] font-mono text-ink-secondary bg-surface border border-border px-2 py-0.5 rounded">
+                  Dual-Speed Router
+                </span>
+              </div>
+            </div>
+
+            {/* 6 Metric Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {/* Card 1: Resolution Rate */}
+              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
+                <div className="text-[11px] text-ink-secondary font-medium">Resolution Rate</div>
+                <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">92.06%</div>
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">232 / 252 turns</div>
+                <div className="mt-1.5">
+                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
+                    $0 LLM Cost (S1)
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 2: Escalation Rate */}
+              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
+                <div className="text-[11px] text-ink-secondary font-medium">Escalation Rate</div>
+                <div className="text-xl font-mono font-bold text-accent-amber mt-1 tabular-nums">7.94%</div>
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">20 turns escalated</div>
+                <div className="mt-1.5">
+                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-amberBg text-accent-amber">
+                    Frontier Judge Gated
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 3: CPU Latency SLA */}
+              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
+                <div className="text-[11px] text-ink-secondary font-medium">CPU Latency SLA</div>
+                <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
+                  0.365<span className="text-xs font-normal text-ink-secondary ml-0.5">ms</span>
+                </div>
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">0.444 ms P95 (&lt; 25ms SLA)</div>
+                <div className="mt-1.5">
+                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
+                    56x Faster Than SLA
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 4: Calibration Error */}
+              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
+                <div className="text-[11px] text-ink-secondary font-medium">Calibration Error (ECE)</div>
+                <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">0.0209</div>
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">2.09% vs 5.0% SLA</div>
+                <div className="mt-1.5">
+                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-cobaltBg text-accent-cobalt">
+                    Brier: 0.0402
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 5: Net LLM Dollar Savings */}
+              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
+                <div className="text-[11px] text-ink-secondary font-medium">Net LLM Savings</div>
+                <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">92.06%</div>
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">$250 → $19.84 / 1k</div>
+                <div className="mt-1.5">
+                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
+                    -$230.16 / 1k calls
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 6: Agreement with Frontier Judge */}
+              <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
+                <div className="text-[11px] text-ink-secondary font-medium">Judge Agreement</div>
+                <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">99.12%</div>
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">Cohen&#39;s κ = 0.9912</div>
+                <div className="mt-1.5">
+                  <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
+                    Parity (p = 0.500)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Micro Dual-Speed Cascade Flow Strip */}
+            <div className="mt-3.5 pt-3 border-t border-border flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-accent-emerald" />
+                  <span className="text-ink-secondary text-[11px]">System-1 Fast Path:</span>
+                  <span className="font-semibold text-accent-emerald">92.06%</span>
+                  <span className="text-ink-secondary text-[10px]">(0.365ms local CPU, $0.00/turn)</span>
+                </div>
+                <span className="text-border">|</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-accent-amber" />
+                  <span className="text-ink-secondary text-[11px]">System-2 Frontier Escalation:</span>
+                  <span className="font-semibold text-accent-amber">7.94%</span>
+                  <span className="text-ink-secondary text-[10px]">(Gated LLM judge, $0.025/turn)</span>
+                </div>
+              </div>
+              <div className="text-[11px] text-ink-secondary">
+                Exact McNemar p = 0.5000 &bull; Newcombe 95% CI [-0.024, +0.0126] &bull; 0 Defect Leakage
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Paired Statistical Metrics with Visual 95% CI Range Bar */}
           <div className="p-6">
             <h3 className="text-xs font-mono uppercase font-bold text-ink-secondary tracking-wider mb-3">
-              3. Paired Statistical Comparison &amp; CI Range Bars
+              4. Paired Statistical Comparison &amp; CI Range Bars
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
@@ -594,13 +714,13 @@ export default function WorkbenchPage() {
         </section>
       )}
 
-      {/* 4. Regression-First Scenario Triage Table */}
+      {/* 5. Regression-First Scenario Triage Table */}
       <section className="bg-surface border border-border rounded-lg overflow-hidden shadow-sm flex flex-col">
         <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-ink-secondary" />
             <span className="text-xs font-mono font-bold text-ink-primary uppercase tracking-wide">
-              Scenario Triage ({scenarios.length} scenarios)
+              5. Scenario Triage ({scenarios.length} scenarios)
             </span>
           </div>
 

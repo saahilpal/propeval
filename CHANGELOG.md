@@ -27,6 +27,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Automated Test Suite (`backend/tests/test_cascade_router.py`):**
   - 19 automated unit tests verifying high-confidence resolution, ambiguous escalation, callback dispatch, batch routing, and CPU latency SLA (<25ms).
 
+### Added - Wave 2: Dual Independent Benchmarks & Dedicated Fine-Tuning Repo
+- **Separate Standalone Training Repository (`saahilpal/propeval-laya-training`):**
+  - Published dedicated public GitHub repository [`saahilpal/propeval-laya-training`](https://github.com/saahilpal/propeval-laya-training) containing standalone curation, model training, and L-BFGS calibration code.
+- **Wave 2 Benchmark A: With-Laya Cascade vs. Without-Laya System-2 (`benchmarks/run_ab_laya_benchmark.py`):**
+  - Audited by `benchmark-agent-ab` across held-out `datasets/system1/test.jsonl` (252 records, SHA-256 `ff45cbfff04b6e082050792c8252ffa3f3bda100e41ba4f98ce5b32f92197d60`).
+  - System-1 Resolution Rate: **92.06%** (232/252 turns resolved locally at $0.00 LLM cost).
+  - Escalation Rate: **7.94%** (20/252 ambiguous turns routed to System-2).
+  - Accuracy: **99.21%**, Macro-F1: **0.9929**, Fail-Class Recall: **0.9917**, ECE: **0.0209**, P50 Latency: **0.365 ms**.
+  - Parity: Exact McNemar test $p = 0.5000$, Newcombe Method 10 95% CI $[-0.0240, +0.0126]$ (statistically indistinguishable from pure frontier LLM).
+  - Cost Savings: **92.06%** reduction in LLM evaluation spend ($250.00 -> $19.84 per 1,000 calls).
+  - Automated regression test: `backend/tests/test_ab_laya_benchmark.py` (9/9 passed).
+- **Wave 2 Benchmark B: Laya vs. Open-Source Competitor Baselines (`scripts/run_competitor_benchmark.py`):**
+  - Audited by `benchmark-agent-competitors` comparing Real-Estate Laya against `MoritzLaurer/mDeBERTa-v3-base-mnli-xnli` and `SetFit`.
+  - vs mDeBERTa: Laya is **3,205x faster** (P95 0.36 ms vs 1,168.9 ms), **935x smaller** (0.60 MB vs 558 MB), higher zero-shot domain F1 (**0.9624** vs 0.5780), and significantly better calibrated (ECE **0.0307** vs 0.2042).
+  - vs SetFit: Laya is **23.9x faster** (0.36 ms vs 8.71 ms) and **788x smaller** (0.60 MB vs 471 MB).
+  - Automated regression test: `backend/tests/test_competitor_benchmark.py` (9/9 passed).
+- **Publication-Grade Benchmark Report:**
+  - Exhaustive 4-section report compiled in `benchmarks/BENCHMARK_REPORT.md` including executive summary, training calibration curves, A/B cascade statistics, and competitor Pareto frontier analysis.
+
+### Added - Wave 3: UI Telemetry & Adversarial Red-Team Hardening
+- **Workbench UI Elevation (`web/`):**
+  - Added Section 3 **Laya System-1 Cascade Telemetry Panel** (`web/src/app/page.tsx`) with live resolution %, escalation %, P50 latency, ECE, cost savings %, and Cohen's $\kappa$.
+  - Added per-turn confidence badges and routing origin pills (`RESOLVED S1` vs `ESCALATED S2`) in Synchronized Turn Inspector (`web/src/app/runs/[id]/scenarios/[scenario_id]/page.tsx`).
+  - Verified across 3 responsive viewports (`1440×900`, `1024×768`, `768×1024`) via Playwright with 0 hydration warnings and 0 console errors (`backend/tests/test_playwright_workbench.py`).
+- **Adversarial Red-Team Hardening (`backend/app/evaluation/cascade_router.py`):**
+  - Implemented `detect_adversarial_ambiguity` intercepting interrogative DNC traps (`"kya main DNC mark kar doon?"`), conditional negations, and prompt injection delimiter escapes, forcing safe escalation to System-2.
+  - Dedicated adversarial test suite in `backend/tests/test_redteam_cascade.py` (26/26 passed in 0.77s).
+- **Desktop Interview Dossier:**
+  - Added Section 7 ("The Laya System-1 Cascade & Dual Benchmark Architecture") to `~/Desktop/propeval-interview-kit/06_MY_ENGINEERING_STORY_AND_QA.md`.
+
 ## [v0.2.0] - 2026-11-20
 
 ### Added - Frontier Anti-Cheat & Evaluator Bias Defenses
