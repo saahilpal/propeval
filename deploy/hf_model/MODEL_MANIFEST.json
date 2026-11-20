@@ -1,4 +1,5 @@
 {
+  "repo_id": "saahilpal17/propeval-laya-hinglish-realestate-v1",
   "model_name": "real_estate_laya_v1",
   "architecture": "Model C (Fine-Tuned Real-Estate Laya: Subwords + Domain Lexicons + L-BFGS)",
   "export_artifact": "models/system1/real_estate_laya_model.joblib",

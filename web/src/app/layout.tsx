@@ -64,7 +64,7 @@ export default function RootLayout({
                 GitHub
               </a>
               <a
-                href="https://huggingface.co/sahilpal/propeval-laya-hinglish-realestate-v1"
+                href="https://huggingface.co/saahilpal17/propeval-laya-hinglish-realestate-v1"
                 target="_blank"
                 rel="noreferrer"
                 className="py-1 px-2.5 rounded-md hover:text-ink-primary hover:bg-slate-100 transition-colors"

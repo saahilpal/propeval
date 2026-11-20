@@ -13,7 +13,7 @@ tags:
 - temperature-scaling
 - fast-inference
 datasets:
-- sahilpal/propeval-hinglish-realestate-eval
+- saahilpal17/propeval-hinglish-realestate-eval
 metrics:
 - f1
 - accuracy

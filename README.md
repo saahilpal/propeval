@@ -5,8 +5,8 @@
 [![Next.js 16](https://img.shields.io/badge/next.js-16.4-black.svg)](https://nextjs.org/)
 [![Tests: 146/146 Passed](https://img.shields.io/badge/tests-146%2F146%20passed-brightgreen.svg)](backend/tests/)
 [![Live Demo](https://img.shields.io/badge/live%20demo-Cloudflare%20Tunnel-blue?logo=cloudflare)](https://pierre-dated-holiday-maryland.trycloudflare.com)
-[![HF Model](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow.svg)](https://huggingface.co/sahilpal/propeval-laya-hinglish-realestate-v1)
-[![HF Dataset](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset-green.svg)](https://huggingface.co/datasets/sahilpal/propeval-hinglish-realestate-eval)
+[![HF Model](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow.svg)](https://huggingface.co/saahilpal17/propeval-laya-hinglish-realestate-v1)
+[![HF Dataset](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset-green.svg)](https://huggingface.co/datasets/saahilpal17/propeval-hinglish-realestate-eval)
 [![Laya Cascade: 97.6% OOD](https://img.shields.io/badge/laya--cascade-97.62%25%20OOD%20at%200.38ms-blueviolet.svg)](benchmarks/BENCHMARK_REPORT.md)
 [![Training Repo](https://img.shields.io/badge/training%20repo-propeval--laya--training-orange.svg)](https://github.com/saahilpal/propeval-laya-training)
 [![Local Build Cost](https://img.shields.io/badge/local%20cost-%240.00-success.svg)](#local-0-build)
@@ -144,8 +144,8 @@ uv run pytest -q
 
 - **Main Repository:** [`https://github.com/saahilpal/propeval`](https://github.com/saahilpal/propeval)
 - **Standalone Training Repository:** [`https://github.com/saahilpal/propeval-laya-training`](https://github.com/saahilpal/propeval-laya-training)
-- **Hugging Face Model:** [`https://huggingface.co/sahilpal/propeval-laya-hinglish-realestate-v1`](https://huggingface.co/sahilpal/propeval-laya-hinglish-realestate-v1)
-- **Hugging Face Dataset:** [`https://huggingface.co/datasets/sahilpal/propeval-hinglish-realestate-eval`](https://huggingface.co/datasets/sahilpal/propeval-hinglish-realestate-eval)
+- **Hugging Face Model:** [`https://huggingface.co/saahilpal17/propeval-laya-hinglish-realestate-v1`](https://huggingface.co/saahilpal17/propeval-laya-hinglish-realestate-v1)
+- **Hugging Face Dataset:** [`https://huggingface.co/datasets/saahilpal17/propeval-hinglish-realestate-eval`](https://huggingface.co/datasets/saahilpal17/propeval-hinglish-realestate-eval)
 
 ---
 

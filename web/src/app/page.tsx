@@ -417,7 +417,7 @@ export default function ProductLandingPage() {
               LinkedIn
             </a>
             <a
-              href="https://huggingface.co/sahilpal"
+              href="https://huggingface.co/saahilpal17"
               target="_blank"
               rel="noreferrer"
               className="hover:text-slate-900 transition-colors"

@@ -69,7 +69,7 @@ PropEval is distributed under the [Apache 2.0 License](https://opensource.org/li
 @dataset{pal2026propeval_dataset,
   author = {Pal, Sahil},
   title = {PropEval Hinglish Real-Estate Telephony Evaluation Dataset},
-  url = {https://huggingface.co/datasets/sahilpal/propeval-hinglish-realestate-eval},
+  url = {https://huggingface.co/datasets/saahilpal17/propeval-hinglish-realestate-eval},
   year = {2026}
 }
 ```
