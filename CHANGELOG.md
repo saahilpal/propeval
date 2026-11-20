@@ -5,6 +5,28 @@ All notable changes to PropEval will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.3.0] - 2026-11-20
+
+### Added - Wave 1: Fast Dataset Split, Real-Estate Laya Model Training & Confidence-Gated Cascade Router
+- **Stratified Dataset Splits (`datasets/system1/`):**
+  - Curation of 1,680 balanced rows across 4 core heads (`dnc_refusal`, `action_confirmation`, `prompt_injection`, `objection_class`).
+  - Globally deduplicated via normalized NFKC SHA-256 with 0 collision across splits.
+  - Partitioned into 70% Train (`train.jsonl`, 1,176 rows), 15% Val (`val.jsonl`, 252 rows), and 15% held-out Sealed Blind Test (`~/Desktop/propeval-blind-vault/sealed_blind_test.jsonl`).
+  - Documented cryptographic checksums and distributions in `datasets/system1/SPLITS_MANIFEST.json` and `DATASET_MANIFEST.md`.
+- **System-1 Local Model Training & Calibration Benchmark (`scripts/train_system1_models.py`):**
+  - Model A (Baseline): Subword Char+Word TF-IDF + Logistic Regression (Macro-F1: 0.9699, ECE: 0.0384, p95: 0.355ms).
+  - Model B (LatentGate): SVD/PCA Latent Whitened Representation + Temperature-Scaled Head (Macro-F1: 0.9659, ECE: 0.0470, p95: 0.500ms).
+  - Model C (Fine-Tuned Real-Estate Laya): High-capacity Hinglish subword ngrams with sublinear TF + Task-Tuned Regularization + L-BFGS Temperature Scaling ($T^* = \arg\min \mathcal{L}_{\text{NLL}}(T)$ via 5-fold CV).
+  - **Winning Model (Model C)** achieved **Macro-F1: 0.9784**, **Fail-Class Recall: 0.9833**, **ECE: 0.0330** (<0.05 SLA), **Brier Score: 0.0297**, and **CPU Latency p95: 0.375ms** (<25ms SLA).
+  - Exported frozen production model artifact to `models/system1/real_estate_laya_model.joblib` (SHA-256: `80f5a27bf092200794c5236b18b980a9389189f2f6cfb149de1d384284d3226f`) with `models/system1/MODEL_MANIFEST.json`.
+- **Confidence-Gated Cascade Router (`backend/app/evaluation/cascade_router.py`):**
+  - Microsecond CPU routing (<0.4ms) with confidence gating ($\tau_{\text{high}} = 0.85$, $\tau_{\text{low}} = 0.15$, margin $\ge 0.70$).
+  - High-confidence verdicts resolved by System-1 with $0 LLM API spend.
+  - Ambiguous / low-confidence turns ($0.15 < p < 0.85$) dynamically escalated to System-2 LLM Judge.
+  - Full support for multi-class objection classification with probability distribution telemetry.
+- **Automated Test Suite (`backend/tests/test_cascade_router.py`):**
+  - 19 automated unit tests verifying high-confidence resolution, ambiguous escalation, callback dispatch, batch routing, and CPU latency SLA (<25ms).
+
 ## [v0.2.0] - 2026-11-20
 
 ### Added - Frontier Anti-Cheat & Evaluator Bias Defenses

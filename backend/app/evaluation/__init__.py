@@ -2,6 +2,13 @@
 
 from __future__ import annotations
 
+from backend.app.evaluation.cascade_router import (
+    BINARY_TASK_CLASSES,
+    OBJECTION_CLASSES,
+    SUPPORTED_TASKS,
+    CascadeDecision,
+    CascadeRouter,
+)
 from backend.app.evaluation.deterministic import (
     evaluate_dnc_compliance,
     evaluate_invented_actions,
@@ -26,9 +33,14 @@ from backend.app.evaluation.rubric_judge import (
 )
 
 __all__ = [
+    "BINARY_TASK_CLASSES",
+    "CascadeDecision",
+    "CascadeRouter",
     "CrossFamilyError",
+    "OBJECTION_CLASSES",
     "PairwiseJudgment",
     "RubricJudgment",
+    "SUPPORTED_TASKS",
     "are_currencies_equivalent",
     "evaluate_dnc_compliance",
     "evaluate_invented_actions",

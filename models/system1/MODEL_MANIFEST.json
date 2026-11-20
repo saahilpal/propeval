@@ -1,0 +1,57 @@
+{
+  "model_name": "real_estate_laya_v1",
+  "architecture": "Model C (Fine-Tuned Real-Estate Laya: Subwords + Domain Lexicons + L-BFGS)",
+  "export_artifact": "models/system1/real_estate_laya_model.joblib",
+  "artifact_sha256": "80f5a27bf092200794c5236b18b980a9389189f2f6cfb149de1d384284d3226f",
+  "artifact_size_bytes": 625976,
+  "training_samples": 1176,
+  "validation_samples": 252,
+  "production_sla": {
+    "max_cpu_latency_ms": 25.0,
+    "max_ece": 0.05
+  },
+  "evaluation_metrics_on_val": {
+    "macro_f1": 0.9784,
+    "fail_class_recall": 0.9833,
+    "ece": 0.033,
+    "brier_score": 0.0297,
+    "latency_p50_ms": 0.324,
+    "latency_p90_ms": 0.35,
+    "latency_p95_ms": 0.375
+  },
+  "per_task_calibration": {
+    "dnc_refusal": {
+      "macro_f1": 0.9833287024173382,
+      "fail_recall": 1.0,
+      "ece": 0.05492804053753332,
+      "brier": 0.02735122768301126,
+      "temperature": 0.3531
+    },
+    "action_confirmation": {
+      "macro_f1": 1.0,
+      "fail_recall": 1.0,
+      "ece": 0.0012255024739478918,
+      "brier": 2.173718109526079e-05,
+      "temperature": 0.1751
+    },
+    "prompt_injection": {
+      "macro_f1": 1.0,
+      "fail_recall": 1.0,
+      "ece": 0.04510096584488027,
+      "brier": 0.009254985349165572,
+      "temperature": 0.1988
+    },
+    "objection_class": {
+      "macro_f1": 0.9304589371980675,
+      "fail_recall": 0.9333333333333332,
+      "ece": 0.030626993697359287,
+      "brier": 0.08228208919010434,
+      "temperature": 0.2607
+    }
+  },
+  "confidence_thresholds": {
+    "tau_high": 0.85,
+    "tau_low": 0.15,
+    "margin_min": 0.7
+  }
+}
