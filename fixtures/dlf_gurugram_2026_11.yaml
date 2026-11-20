@@ -1,0 +1,43 @@
+schema_version: "1.0"
+fixture_id: "dlf_gurugram_2026_11"
+version_tag: "2026.11.1"
+effective_from: "2026-11-01"
+project_name: "DLF The Arbour"
+developer: "DLF Limited"
+city: "Gurugram"
+locality: "Sector 63, Golf Course Extension Road"
+rera_id: "GGM/700/2026"
+
+facts_json:
+  project_name: "DLF The Arbour"
+  rera_id: "GGM/700/2026"
+  city: "Gurugram"
+  locality: "Sector 63"
+  developer: "DLF Limited"
+  possession: "Q2 2027"
+  possession_date: "2027-06-30"
+  starting_price_inr: 25000000
+  starting_price_raw: "2.5 cr"
+  configurations:
+    - bhk: 3.0
+      carpet_area_sqft: 1850
+      starting_price_inr: 25000000
+      starting_price_raw: "2.5 cr"
+      towers: ["Tower 1", "Tower 2"]
+    - bhk: 4.0
+      carpet_area_sqft: 2600
+      starting_price_inr: 38000000
+      starting_price_raw: "3.8 cr"
+      towers: ["Tower 3"]
+  floor_rise_per_floor_inr: 75000
+  amenities:
+    - "Central Luxury Clubhouse"
+    - "Olympic Sized Pool"
+    - "Spa & Wellness Center"
+    - "Tennis & Badminton Courts"
+    - "Smart Biometric Security"
+  payment_plans:
+    - name: "Construction Linked Plan"
+      booking_amount_pct: 10
+    - name: "30:40:30 Builder Subvention"
+      booking_amount_pct: 30

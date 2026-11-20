@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: propeval-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: propeval_user
+      POSTGRES_PASSWORD: propeval_pass
+      POSTGRES_DB: propeval
+    ports:
+      - "5433:5432"
+    volumes:
+      - propeval_pgdata:/var/lib/postgresql/data
+      - ./backend/sql/01_init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U propeval_user -d propeval"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: propeval-jaeger
+    restart: always
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+volumes:
+  propeval_pgdata:

@@ -1,0 +1,43 @@
+schema_version: "1.0"
+fixture_id: "lodha_wakad_2026_11"
+version_tag: "2026.11.1"
+effective_from: "2026-11-01"
+project_name: "Lodha Wakad"
+developer: "Lodha Group"
+city: "Pune"
+locality: "Wakad"
+rera_id: "P52100012345"
+
+facts_json:
+  project_name: "Lodha Wakad"
+  rera_id: "P52100012345"
+  city: "Pune"
+  locality: "Wakad"
+  developer: "Lodha Group"
+  possession: "Q4 2026"
+  possession_date: "2026-12-31"
+  starting_price_inr: 12000000
+  starting_price_raw: "1.2 cr"
+  configurations:
+    - bhk: 2.0
+      carpet_area_sqft: 780
+      starting_price_inr: 12000000
+      starting_price_raw: "1.2 cr"
+      towers: ["Tower A", "Tower B"]
+    - bhk: 3.0
+      carpet_area_sqft: 1100
+      starting_price_inr: 17500000
+      starting_price_raw: "1.75 cr"
+      towers: ["Tower C"]
+  floor_rise_per_floor_inr: 45000
+  amenities:
+    - "Clubhouse"
+    - "Swimming Pool"
+    - "Gymnasium"
+    - "Children Play Area"
+    - "24x7 Security"
+  payment_plans:
+    - name: "Construction Linked Plan"
+      booking_amount_pct: 10
+    - name: "20:80 Possession Linked"
+      booking_amount_pct: 20
