@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS tenants (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Default Local Dev/Test Tenant
+INSERT INTO tenants (id, name, data_region, encrypted_dek)
+VALUES ('00000000-0000-0000-0000-000000000001', 'Default Local Tenant', 'ap-south-1', '\x0102030405060708')
+ON CONFLICT (id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS tenant_credentials (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,

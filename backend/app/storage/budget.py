@@ -84,3 +84,8 @@ async def settle_budget(
             res["tenant_id"],
         )
 
+
+# Aliases
+create_budget_reservation = reserve_budget
+settle_budget_reservation = settle_budget
+

@@ -29,5 +29,20 @@ services:
     environment:
       - COLLECTOR_OTLP_ENABLED=true
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: propeval-api
+    restart: always
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://propeval_user:propeval_pass@postgres:5432/propeval
+      - DATABASE_URL_SYNC=postgresql://propeval_user:propeval_pass@postgres:5432/propeval
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   propeval_pgdata:

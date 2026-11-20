@@ -118,3 +118,12 @@ def apply(
         out = simulate_barge_in_truncation(out, barge_in_word_limit=barge_in_limit)
 
     return out
+
+
+class ASRPerturbationEngine:
+    def __init__(self, seed: int = 42):
+        self.seed = seed
+
+    def perturb(self, text: str, error_rate: float = 0.25) -> str:
+        return perturb_telephony_asr(text, noise_rate=error_rate, seed=self.seed)
+

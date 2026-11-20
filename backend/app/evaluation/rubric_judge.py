@@ -62,11 +62,14 @@ def get_model_family(model_id: str) -> str:
 
 
 def verify_cross_family(target_model_id: str, judge_model_id: str) -> None:
-    """Enforce ADR-004 requirement that judge family != target model family."""
+    """Enforce ADR-004 requirement that judge family != target model family.
+
+    Exempts 'deterministic' test mocks and 'other' unknown models.
+    """
     target_family = get_model_family(target_model_id)
     judge_family = get_model_family(judge_model_id)
 
-    if target_family != "other" and target_family == judge_family:
+    if target_family not in ("other", "deterministic") and target_family == judge_family:
         raise CrossFamilyError(
             f"Cross-family violation: Target model '{target_model_id}' ({target_family}) "
             f"cannot be judged by '{judge_model_id}' from the same family."

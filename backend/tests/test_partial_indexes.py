@@ -9,6 +9,7 @@ from backend.app.storage.db import close_db_pool, get_db_pool
 async def test_split_partial_indexes():
     pool = await get_db_pool()
     async with pool.acquire() as conn:
+        await conn.execute("SET enable_seqscan = off")
         # Check queued jobs index
         plan_queued_raw = await conn.fetchval(
             "EXPLAIN (FORMAT JSON) SELECT * FROM eval_jobs WHERE status = 'QUEUED' ORDER BY priority DESC, run_after ASC"

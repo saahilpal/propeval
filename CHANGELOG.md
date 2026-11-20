@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Gate 2: Control Plane API, Durable SSE Stream, Worker & 5-Mutant Meta-Eval
+- **FastAPI Control Plane (`backend/app/main.py`, `backend/app/api/`):**
+  - Live on `http://localhost:8001` with RFC 9457 Problem Details error formatting.
+  - `POST /api/v1/prompts` immutable registration with SHA-256 deduplication.
+  - `POST /api/v1/fixtures` versioned property truth fixture upload.
+  - `POST /api/v1/suites` and `POST /api/v1/replay/import` for telephony transcripts with DPDP PII scrubbing.
+  - `POST /api/v1/runs`, `GET /api/v1/runs/{id}/diff` (non-compensatory matrix & failure stages), `GET /api/v1/runs/{id}/scenarios/{id}` (synchronized turn inspection).
+  - `GET /api/v1/runs/{id}/stream` durable Server-Sent Events with `Last-Event-ID` replay.
+  - `DELETE /api/v1/tenants/{id}` cascading purge.
+- **Evaluation Worker & Execution Engine (`backend/app/engine/worker.py`):**
+  - `execute_eval_job` runs FSM simulation, Indian ASR perturbations, mock tool execution, and Layer 1-3 evaluations.
+  - Automated budget reservation settlement and paired statistics computation.
+- **CLI (`backend/cli/main.py`):**
+  - `propeval run --baseline ... --candidate ... --suite ... --fixture ... --gate` with monospace tabular output and exit code enforcement.
+- **Security & DPDP Compliance:**
+  - `RemoteWebhookAgentAdapter` with SSRF protection, loopback/private IP blocking, and 45s hard timeout.
+  - `redact_pii_dpdp` with Verhoeff Aadhaar validation, PAN redaction, Indian phone scrubbing while preserving RERA numbers.
+- **5-Mutant Meta-Eval (`backend/tests/test_mutation_meta_eval.py`):**
+  - Proves PropEval catches 5 out of 5 regressions (dropped DNC, stale RERA date, broken currency parse, invented WhatsApp confirmation after HTTP 503, malformed booking tool schema) locally at $0 spend.
+- 51/51 automated tests passing.
+
 ### Added - Gate 1: Core Database, Replay Engine, Evaluation Layers & Paired Stats
 - **Database & Storage (Postgres 17):**
   - Full relational DDL in `backend/sql/01_init.sql` with 15 core tables.

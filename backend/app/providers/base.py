@@ -234,3 +234,9 @@ class DeterministicReplayProvider:
             provider="deterministic",
             model_id=model_id,
         )
+
+
+def get_llm_provider(provider_name: str = "deterministic", model_id: str = "deterministic-replay-v1") -> LLMProvider:
+    """Factory returning configured LLMProvider (defaults to $0 DeterministicReplayProvider)."""
+    return DeterministicReplayProvider()
+

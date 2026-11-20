@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import cast
 
+import asyncio
 import asyncpg
 
 from backend.app.config import settings
@@ -13,6 +14,14 @@ _pool: asyncpg.Pool | None = None
 
 async def get_db_pool() -> asyncpg.Pool:
     global _pool
+    current_loop = asyncio.get_running_loop()
+    if _pool is not None and getattr(_pool, "_loop", None) is not current_loop:
+        try:
+            await _pool.close()
+        except Exception:
+            pass
+        _pool = None
+
     if _pool is None:
         dsn = settings.database_url.replace("postgresql+asyncpg://", "postgresql://")
         _pool = await asyncpg.create_pool(
@@ -28,6 +37,11 @@ async def close_db_pool() -> None:
     if _pool is not None:
         await _pool.close()
         _pool = None
+
+
+# Aliases
+get_pool = get_db_pool
+close_pool = close_db_pool
 
 
 @asynccontextmanager
