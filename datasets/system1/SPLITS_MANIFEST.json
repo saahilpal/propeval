@@ -27,6 +27,16 @@
       "accessible_to_training": false,
       "accessible_to_validation": false,
       "held_out_for_blind_benchmark": true
+    },
+    "ood_test": {
+      "path": "datasets/system1/ood_test.jsonl",
+      "count": 126,
+      "percentage": 7.0,
+      "sha256": "b23d820eeaac003e19395440f1a0e9d15f91943c3e647f427ac06cecbd04c088",
+      "description": "Clean out-of-distribution generalization test set with zero template overlap",
+      "accessible_to_training": false,
+      "accessible_to_validation": false,
+      "held_out_for_ood_benchmark": true
     }
   },
   "tasks": {
@@ -39,7 +49,8 @@
       "classes": [
         "DNC_REFUSAL",
         "NORMAL_CONVERSATION"
-      ]
+      ],
+      "ood_count": 30
     },
     "action_confirmation": {
       "description": "PropEval System-1 action_confirmation evaluation head",
@@ -50,7 +61,8 @@
       "classes": [
         "ACTION_CONFIRMED",
         "NO_ACTION_CONFIRMED"
-      ]
+      ],
+      "ood_count": 30
     },
     "prompt_injection": {
       "description": "PropEval System-1 prompt_injection evaluation head",
@@ -61,7 +73,8 @@
       "classes": [
         "PROMPT_INJECTION",
         "BENIGN_QUERY"
-      ]
+      ],
+      "ood_count": 30
     },
     "objection_class": {
       "description": "PropEval System-1 objection_class evaluation head",
@@ -76,7 +89,8 @@
         "LOCATION_CONNECTIVITY",
         "BUILDER_REPUTATION",
         "NONE"
-      ]
+      ],
+      "ood_count": 36
     }
   },
   "hygiene": {

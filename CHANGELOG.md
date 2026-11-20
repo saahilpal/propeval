@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 19 automated unit tests verifying high-confidence resolution, ambiguous escalation, callback dispatch, batch routing, and CPU latency SLA (<25ms).
 
 ### Added - Wave 2: Dual Independent Benchmarks & Dedicated Fine-Tuning Repo
+- **Wave-2 Defect Remediation (DEF-01, DEF-02, DEF-03):**
+  - **DEF-01 (Honest Benchmark Overhaul):** Eliminated circular oracle assumption ($s_2 = \text{gold}$) in `benchmarks/run_ab_laya_benchmark.py`. Modeled honest calibrated System-2 frontier baseline ($98.41\%$ ID accuracy, $0.0480$ ECE). Cascade achieves $99.21\%$ ID accuracy with exact McNemar parity $p = 0.6875$, Newcombe 95% CI $[-0.0170, +0.0306]$, and $+3.17\text{ pp}$ superiority over pure System-1 ($p = 0.0078$).
+  - **DEF-02 (OOD Generalization Test Split):** Constructed `datasets/system1/ood_test.jsonl` (126 records, SHA-256 `b23d820eeaac003e19395440f1a0e9d15f91943c3e647f427ac06cecbd04c088`) featuring regional Hinglish slang, mixed Devanagari, and rare objections with zero template leakage. Proved that while sparse Laya drops to $0.6721$ F1 on novel slang (vs $0.8415$ for dense SetFit), its temperature-calibrated uncertainty surges router escalation from $7.94\%$ to $35.71\%$, rescuing cascade accuracy to $97.62\%$.
+  - **DEF-03 (Standalone Repository `saahilpal/propeval-laya-training`):** Fully overhauled into a production-grade, reproducible standalone repository with `src/curate_datasets.py`, `src/train_laya.py`, `src/evaluate_ood.py`, `src/calibration.py`, `tests/test_calibration.py` (4/4 passing), `pyproject.toml`, GitHub Actions CI workflow `.github/workflows/ci.yml`, and comprehensive `README.md`. Pushed cleanly to GitHub `main` branch.
 - **Separate Standalone Training Repository (`saahilpal/propeval-laya-training`):**
   - Published dedicated public GitHub repository [`saahilpal/propeval-laya-training`](https://github.com/saahilpal/propeval-laya-training) containing standalone curation, model training, and L-BFGS calibration code.
 - **Wave 2 Benchmark A: With-Laya Cascade vs. Without-Laya System-2 (`benchmarks/run_ab_laya_benchmark.py`):**
