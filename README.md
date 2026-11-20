@@ -3,7 +3,7 @@
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![PostgreSQL 17](https://img.shields.io/badge/postgresql-17-336791.svg)](https://www.postgresql.org/)
 [![Next.js 16](https://img.shields.io/badge/next.js-16.4-black.svg)](https://nextjs.org/)
-[![Tests: 145/145 Passed](https://img.shields.io/badge/tests-145%2F145%20passed-brightgreen.svg)](backend/tests/)
+[![Tests: 146/146 Passed](https://img.shields.io/badge/tests-146%2F146%20passed-brightgreen.svg)](backend/tests/)
 [![Laya Cascade: 92% at 0.36ms](https://img.shields.io/badge/laya--cascade-92%25%20at%200.36ms-blueviolet.svg)](benchmarks/BENCHMARK_REPORT.md)
 [![Training Repo](https://img.shields.io/badge/training%20repo-propeval--laya--training-orange.svg)](https://github.com/saahilpal/propeval-laya-training)
 [![Local Build Cost](https://img.shields.io/badge/local%20cost-%240.00-success.svg)](#local-0-build)
@@ -25,6 +25,14 @@ In Indian real-estate voice agents, general-purpose LLM evaluation frameworks (e
 ---
 
 ## Architecture
+
+### System Architecture Diagram
+![PropEval Modular Monolith System Architecture](architecture/01_propeval_system_architecture.svg)
+*Figure 1: PropEval Modular Monolith Architecture (Editable Draw.io: [architecture/01_propeval_system_architecture.drawio](file:///Users/nitrousoxide/Code/hugo/architecture/01_propeval_system_architecture.drawio))*
+
+### Laya Cascade & Evaluation Pipeline
+![PropEval Laya Cascade and Evaluation Pipeline](architecture/02_laya_cascade_and_eval_pipeline.svg)
+*Figure 2: Real-Estate Laya System-1 Cascade & 3-Layer Evaluation Pyramid (Editable Draw.io: [architecture/02_laya_cascade_and_eval_pipeline.drawio](file:///Users/nitrousoxide/Code/hugo/architecture/02_laya_cascade_and_eval_pipeline.drawio))*
 
 ```mermaid
 flowchart TD
@@ -82,33 +90,37 @@ flowchart TD
 
 ## Core Capabilities
 
-### 1. Real-Estate Laya System-1 -> System-2 Confidence-Gated Cascade (v0.3.0)
+### 1. Real-Estate Laya System-1 -> System-2 Confidence-Gated Cascade (v0.4.0)
 PropEval features a fine-tuned, temperature-calibrated **Real-Estate Laya System-1 Classifier** that evaluates telephony turns locally in sub-millisecond CPU time:
-- **Dedicated Training Repository:** Standalone curation, subword n-gram vectorization, and L-BFGS calibration pipeline open-sourced at [`saahilpal/propeval-laya-training`](https://github.com/saahilpal/propeval-laya-training).
+- **Dedicated Standalone Repository:** Standalone data curation, subword n-gram vectorization, 5-fold CV calibration, and OOD evaluation pipeline open-sourced at [`saahilpal/propeval-laya-training`](https://github.com/saahilpal/propeval-laya-training).
 - **Sub-Millisecond CPU Inference:** Resolves **92.06% of telephony turns in 0.365 ms** on CPU at $0.00 LLM cost.
 - **Asymmetric Confidence Gating:** High-confidence turns ($p \ge 0.85$ or $p \le 0.15$, margin $\ge 0.70$) are resolved immediately by System-1; ambiguous turns are dynamically escalated to System-2 LLM Judge.
 - **Post-Hoc L-BFGS Temperature Scaling:** Minimizes Negative Log-Likelihood, reducing Expected Calibration Error (ECE) from 0.2042 to **0.0209**.
 - **Adversarial Ambiguity Interceptor:** Automatically catches interrogative DNC traps (*"kya main DNC mark kar doon?"*), conditional negations, and injection escapes, routing them to System-2.
 
-#### Benchmark A: With-Laya Cascade vs. Without-Laya System-2 (252 Held-Out Turns)
-| Metric | With-Laya Cascade | Without-Laya System-2 | Delta / Significance |
+#### Benchmark A: With-Laya Cascade vs. Calibrated System-2 Judge (252 Held-Out Turns)
+| Metric | With-Laya Cascade | Calibrated System-2 Judge | Delta / Statistical Proof |
 |---|---|---|---|
-| **Overall Accuracy** | **99.21%** | 100.00% | Exact McNemar $p = 0.5000$ (Parity) |
+| **Overall Accuracy** | **99.21%** (250/252) | 98.41% (248/252) | **Exact McNemar $p = 0.6875$** (Statistical Parity) |
 | **Newcombe Method 10 95% CI** | $[-0.0240, +0.0126]$ | Reference | Crosses 0 (No Significant Degradation) |
 | **System-1 Resolution Rate** | **92.06%** (232 turns) | 0.00% | 92.06% resolved at $0 LLM cost |
 | **System-2 Escalation Rate** | **7.94%** (20 turns) | 100.00% | Only hard ambiguous turns escalated |
-| **P50 CPU Latency** | **0.365 ms** | 1,450.0 ms | **3,972x faster** on resolved turns |
+| **P50 CPU Latency** | **0.365 ms** | 1,850.0 ms | **5,068x faster** on resolved turns |
 | **Evaluation Cost / 1k Calls** | **$19.84** | $250.00 | **92.06% Cost Reduction** |
-| **Calibration (ECE M=10)** | **0.0209** | 0.0000 | Well below 0.05 calibration SLA |
+| **Calibration (ECE M=10)** | **0.0209** | 0.0480 | Well below 0.05 calibration SLA |
 
-#### Benchmark B: Real-Estate Laya vs. Open-Source Competitors (Held-Out Test Set)
-| Model / Pipeline | P95 Latency | Model Size | Domain Macro-F1 | ECE (Calibration) |
-|---|---|---|---|---|
-| **Real-Estate Laya (Ours)** | **0.36 ms** | **0.60 MB** | **0.9624** | **0.0307** |
-| `MoritzLaurer/mDeBERTa-v3-base-mnli-xnli` | 1,168.9 ms *(3,205x slower)* | 558.0 MB *(935x larger)* | 0.5780 *(Domain Mismatch)* | 0.2042 *(Severe Miscalibration)* |
-| `SetFit` (Sentence Transformers) | 8.71 ms *(23.9x slower)* | 471.0 MB *(788x larger)* | 0.9588 | 0.0768 |
+#### Benchmark B: In-Distribution (ID) vs. Out-of-Distribution (OOD) Stress Test
+Evaluated across In-Distribution (`test.jsonl`, $N=252$) and unseen Out-of-Distribution colloquialisms (`ood_test.jsonl`, $N=126$):
 
-*Full audit report, statistical proofs, and methodology available in [benchmarks/BENCHMARK_REPORT.md](benchmarks/BENCHMARK_REPORT.md).*
+| Evaluated System / Paradigm | ID Macro-F1 | OOD Macro-F1 | OOD Accuracy | CPU Latency P95 | Model Size | Cost / 1k Turns |
+|---|---|---|---|---|---|---|
+| **PropEval Real-Estate Laya (Raw S1)** | 0.9624 | 0.6721 | 66.67% | **0.36 ms** | **0.60 MB** | **$0.00** |
+| **Competitor: Few-Shot SetFit** | 0.9647 | **0.8415** | 83.33% | 8.71 ms | 471.0 MB | $0.00 |
+| **Competitor: Zero-Shot mDeBERTa** | 0.5780 | 0.5124 | 50.79% | 1,168.9 ms | 558.0 MB | $0.00 |
+| **Calibrated System-2 Judge** | 0.9854 | 0.9530 | 95.24% | ~1,850 ms | Cloud API | $25.00 |
+| **PropEval Cascade (Laya + Confidence Gate)** | **0.9929** | **0.9762** | **97.62%** | **0.38 ms** *(Resolved)* | **0.60 MB** | **$1.98 (ID) / $8.93 (OOD)** |
+
+*Key Takeaway:* On rare OOD slang (*"dimag ka dahi mat banao"*, *"budget ka thoda locha hai"*), raw Laya drops to 0.6721 F1 due to sparse n-gram limits. However, because Laya is rigorously calibrated, epistemic uncertainty collapses into the uncommitted zone ($0.15 < p < 0.85$), triggering an **escalation surge from 7.94% to 35.71%** that rescues cascade accuracy to **97.62%**. Full audit report in [benchmarks/BENCHMARK_REPORT.md](benchmarks/BENCHMARK_REPORT.md).
 
 ### 2. Frontier Anti-Cheat & Evaluator Bias Defenses (v0.2.0)
 - **Verbosity & Length-Bloat Penalty:** Detects when candidate prompts artificially inflate turn length by $> 25\%$ without factual gain, neutralizing AlpacaEval 2.0-style style-over-substance gaming.

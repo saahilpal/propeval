@@ -2,6 +2,15 @@
 
 PropEval is an evaluation and prompt regression workbench designed for Hinglish voice AI agents in Indian real estate telephony.
 
+## 1. System Architecture Overview
+![PropEval Modular Monolith System Architecture](architecture/01_propeval_system_architecture.svg)
+*Figure 1: PropEval Modular Monolith Architecture (Editable Draw.io: [architecture/01_propeval_system_architecture.drawio](file:///Users/nitrousoxide/Code/hugo/architecture/01_propeval_system_architecture.drawio))*
+
+## 2. Laya Cascade & 3-Layer Evaluation Pipeline
+![PropEval Laya Cascade and Evaluation Pipeline](architecture/02_laya_cascade_and_eval_pipeline.svg)
+*Figure 2: Real-Estate Laya System-1 Cascade & 3-Layer Evaluation Pyramid (Editable Draw.io: [architecture/02_laya_cascade_and_eval_pipeline.drawio](file:///Users/nitrousoxide/Code/hugo/architecture/02_laya_cascade_and_eval_pipeline.drawio))*
+
+## 3. Component Flow Specification
 ```mermaid
 flowchart TD
     subgraph UI["Frontend UI / UX (Next.js 16 / React 19)"]

@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.app.api.fixtures import router as fixtures_router
+from backend.app.api.metrics import router as metrics_router
 from backend.app.api.prompts import router as prompts_router
 from backend.app.api.runs import router as runs_router
 from backend.app.api.suites import router as suites_router
@@ -105,3 +106,4 @@ app.include_router(fixtures_router, prefix="/api/v1")
 app.include_router(suites_router, prefix="/api/v1")
 app.include_router(runs_router, prefix="/api/v1")
 app.include_router(tenants_router, prefix="/api/v1")
+app.include_router(metrics_router, prefix="/api/v1")

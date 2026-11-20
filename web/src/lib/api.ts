@@ -104,6 +104,34 @@ export interface ScenarioComparison {
   };
 }
 
+export interface CascadeMetrics {
+  resolution_rate_pct: number;
+  escalation_rate_pct: number;
+  p50_latency_ms?: number;
+  expected_calibration_error?: number;
+  cost_savings_pct?: number;
+  total_evaluated_turns?: number;
+  resolved_count: number;
+  total_turns: number;
+  escalated_count: number;
+  cpu_latency_p50_ms: number;
+  cpu_latency_p95_ms: number;
+  cpu_latency_sla_ms: number;
+  speedup_factor: number;
+  ece: number;
+  brier_score: number;
+  net_dollar_savings_pct: number;
+  cost_without_cascade_usd_per_1k: number;
+  cost_with_cascade_usd_per_1k: number;
+  dollar_savings_usd_per_1k: number;
+  cohens_kappa: number;
+  mcnemar_p_value: number;
+  newcombe_ci_low: number;
+  newcombe_ci_high: number;
+  zero_defect_leakage: boolean;
+  source?: string;
+}
+
 export interface TurnDetail {
   turn_index: number;
   fsm_state: string;
@@ -114,6 +142,18 @@ export interface TurnDetail {
   tool_outcomes: any[];
   ttft_ms: number;
   cost_usd: number;
+  cascade_status?: string;
+  cascade_tier?: string;
+  cascade_confidence?: number;
+  cascade_latency_ms?: number;
+  cascade_margin?: number;
+  cascade_posterior?: number;
+  metrics?: {
+    confidence?: number;
+    is_escalated?: boolean;
+    margin?: number;
+    posterior?: number;
+  };
 }
 
 export interface AssertionDetail {
@@ -213,5 +253,11 @@ export async function createRun(payload: {
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("Failed to start comparison run");
+  return res.json();
+}
+
+export async function fetchCascadeMetrics(): Promise<CascadeMetrics> {
+  const res = await fetch(`${API_BASE}/metrics/cascade`);
+  if (!res.ok) throw new Error("Failed to fetch live cascade telemetry");
   return res.json();
 }

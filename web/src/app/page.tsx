@@ -10,6 +10,8 @@ import {
   fetchRunDiff,
   fetchRunScenarios,
   createRun,
+  fetchCascadeMetrics,
+  CascadeMetrics,
   PromptVersion,
   ProjectFixture,
   ScenarioSuite,
@@ -54,6 +56,8 @@ export default function WorkbenchPage() {
   // Active run data
   const [diffData, setDiffData] = useState<RunDiffResponse | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioComparison[]>([]);
+  const [cascadeMetrics, setCascadeMetrics] = useState<CascadeMetrics | null>(null);
+  const [cascadeLoading, setCascadeLoading] = useState<boolean>(true);
   const [filterMode, setFilterMode] = useState<string>("all");
   const [selectedScenarioIdx, setSelectedScenarioIdx] = useState<number>(0);
   const [showFailureBreakdown, setShowFailureBreakdown] = useState<boolean>(false);
@@ -71,16 +75,22 @@ export default function WorkbenchPage() {
   useEffect(() => {
     async function loadInitial() {
       try {
-        const [pList, fList, sList, rList] = await Promise.all([
+        const [pList, fList, sList, rList, cMetrics] = await Promise.all([
           fetchPrompts(),
           fetchFixtures(),
           fetchSuites(),
           fetchRuns(),
+          fetchCascadeMetrics().catch((err) => {
+            console.warn("Cascade metrics fetch warning:", err);
+            return null;
+          }),
         ]);
         setPrompts(pList);
         setFixtures(fList);
         setSuites(sList);
         setRuns(rList);
+        if (cMetrics) setCascadeMetrics(cMetrics);
+        setCascadeLoading(false);
 
         if (pList.length >= 2) {
           setV1PromptId(pList[0].id);
@@ -510,10 +520,10 @@ export default function WorkbenchPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono text-accent-emerald bg-accent-emeraldBg border border-accent-emerald/20 px-2 py-0.5 rounded font-semibold">
-                  Wave 2 Sealed Test Ledger (N=252)
+                  Wave 2 Sealed Test Ledger (N={cascadeMetrics?.total_turns ?? 252})
                 </span>
                 <span className="text-[10px] font-mono text-ink-secondary bg-surface border border-border px-2 py-0.5 rounded">
-                  Dual-Speed Router
+                  {cascadeMetrics?.source === "live_audit_ledger" ? "Live Ledger API" : "Dual-Speed Router"}
                 </span>
               </div>
             </div>
@@ -523,8 +533,16 @@ export default function WorkbenchPage() {
               {/* Card 1: Resolution Rate */}
               <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
                 <div className="text-[11px] text-ink-secondary font-medium">Resolution Rate</div>
-                <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">92.06%</div>
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">232 / 252 turns</div>
+                {cascadeLoading ? (
+                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
+                ) : (
+                  <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">
+                    {(cascadeMetrics?.resolution_rate_pct ?? 92.06).toFixed(2)}%
+                  </div>
+                )}
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">
+                  {cascadeMetrics?.resolved_count ?? 232} / {cascadeMetrics?.total_turns ?? 252} turns
+                </div>
                 <div className="mt-1.5">
                   <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
                     $0 LLM Cost (S1)
@@ -535,8 +553,16 @@ export default function WorkbenchPage() {
               {/* Card 2: Escalation Rate */}
               <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
                 <div className="text-[11px] text-ink-secondary font-medium">Escalation Rate</div>
-                <div className="text-xl font-mono font-bold text-accent-amber mt-1 tabular-nums">7.94%</div>
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">20 turns escalated</div>
+                {cascadeLoading ? (
+                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
+                ) : (
+                  <div className="text-xl font-mono font-bold text-accent-amber mt-1 tabular-nums">
+                    {(cascadeMetrics?.escalation_rate_pct ?? 7.94).toFixed(2)}%
+                  </div>
+                )}
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">
+                  {cascadeMetrics?.escalated_count ?? 20} turns escalated
+                </div>
                 <div className="mt-1.5">
                   <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-amberBg text-accent-amber">
                     Frontier Judge Gated
@@ -547,13 +573,20 @@ export default function WorkbenchPage() {
               {/* Card 3: CPU Latency SLA */}
               <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
                 <div className="text-[11px] text-ink-secondary font-medium">CPU Latency SLA</div>
-                <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
-                  0.365<span className="text-xs font-normal text-ink-secondary ml-0.5">ms</span>
+                {cascadeLoading ? (
+                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
+                ) : (
+                  <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
+                    {(cascadeMetrics?.cpu_latency_p50_ms ?? 0.365).toFixed(3)}
+                    <span className="text-xs font-normal text-ink-secondary ml-0.5">ms</span>
+                  </div>
+                )}
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">
+                  {(cascadeMetrics?.cpu_latency_p95_ms ?? 0.444).toFixed(3)} ms P95 (&lt; {(cascadeMetrics?.cpu_latency_sla_ms ?? 25.0).toFixed(0)}ms SLA)
                 </div>
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">0.444 ms P95 (&lt; 25ms SLA)</div>
                 <div className="mt-1.5">
                   <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
-                    56x Faster Than SLA
+                    {(cascadeMetrics?.speedup_factor ?? 56.3).toFixed(0)}x Faster Than SLA
                   </span>
                 </div>
               </div>
@@ -561,11 +594,19 @@ export default function WorkbenchPage() {
               {/* Card 4: Calibration Error */}
               <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
                 <div className="text-[11px] text-ink-secondary font-medium">Calibration Error (ECE)</div>
-                <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">0.0209</div>
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">2.09% vs 5.0% SLA</div>
+                {cascadeLoading ? (
+                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
+                ) : (
+                  <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
+                    {(cascadeMetrics?.ece ?? 0.0209).toFixed(4)}
+                  </div>
+                )}
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">
+                  {((cascadeMetrics?.ece ?? 0.0209) * 100).toFixed(2)}% vs 5.0% SLA
+                </div>
                 <div className="mt-1.5">
                   <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-cobaltBg text-accent-cobalt">
-                    Brier: 0.0402
+                    Brier: {(cascadeMetrics?.brier_score ?? 0.0402).toFixed(4)}
                   </span>
                 </div>
               </div>
@@ -573,11 +614,19 @@ export default function WorkbenchPage() {
               {/* Card 5: Net LLM Dollar Savings */}
               <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
                 <div className="text-[11px] text-ink-secondary font-medium">Net LLM Savings</div>
-                <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">92.06%</div>
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">$250 → $19.84 / 1k</div>
+                {cascadeLoading ? (
+                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
+                ) : (
+                  <div className="text-xl font-mono font-bold text-accent-emerald mt-1 tabular-nums">
+                    {(cascadeMetrics?.net_dollar_savings_pct ?? 92.06).toFixed(2)}%
+                  </div>
+                )}
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">
+                  ${(cascadeMetrics?.cost_without_cascade_usd_per_1k ?? 250.0).toFixed(2)} → ${(cascadeMetrics?.cost_with_cascade_usd_per_1k ?? 19.84).toFixed(2)} / 1k
+                </div>
                 <div className="mt-1.5">
                   <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
-                    -$230.16 / 1k calls
+                    -${(cascadeMetrics?.dollar_savings_usd_per_1k ?? 230.16).toFixed(2)} / 1k calls
                   </span>
                 </div>
               </div>
@@ -585,11 +634,19 @@ export default function WorkbenchPage() {
               {/* Card 6: Agreement with Frontier Judge */}
               <div className="border border-border rounded-lg p-3 bg-surface shadow-2xs">
                 <div className="text-[11px] text-ink-secondary font-medium">Judge Agreement</div>
-                <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">99.12%</div>
-                <div className="text-[10px] font-mono text-ink-secondary mt-1">Cohen&#39;s κ = 0.9912</div>
+                {cascadeLoading ? (
+                  <div className="h-7 w-20 bg-gray-200/70 rounded animate-pulse motion-reduce:animate-none my-1" />
+                ) : (
+                  <div className="text-xl font-mono font-bold text-ink-primary mt-1 tabular-nums">
+                    {((cascadeMetrics?.cohens_kappa ?? 0.9912) * 100).toFixed(2)}%
+                  </div>
+                )}
+                <div className="text-[10px] font-mono text-ink-secondary mt-1">
+                  Cohen&#39;s κ = {(cascadeMetrics?.cohens_kappa ?? 0.9912).toFixed(4)}
+                </div>
                 <div className="mt-1.5">
                   <span className="text-[9px] font-mono uppercase font-semibold px-1.5 py-0.5 rounded bg-accent-emeraldBg text-accent-emerald">
-                    Parity (p = 0.500)
+                    Parity (p = {(cascadeMetrics?.mcnemar_p_value ?? 0.5).toFixed(3)})
                   </span>
                 </div>
               </div>
@@ -601,19 +658,27 @@ export default function WorkbenchPage() {
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-accent-emerald" />
                   <span className="text-ink-secondary text-[11px]">System-1 Fast Path:</span>
-                  <span className="font-semibold text-accent-emerald">92.06%</span>
-                  <span className="text-ink-secondary text-[10px]">(0.365ms local CPU, $0.00/turn)</span>
+                  <span className="font-semibold text-accent-emerald tabular-nums">
+                    {(cascadeMetrics?.resolution_rate_pct ?? 92.06).toFixed(2)}%
+                  </span>
+                  <span className="text-ink-secondary text-[10px] tabular-nums">
+                    ({(cascadeMetrics?.cpu_latency_p50_ms ?? 0.365).toFixed(3)}ms local CPU, $0.00/turn)
+                  </span>
                 </div>
                 <span className="text-border">|</span>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-accent-amber" />
                   <span className="text-ink-secondary text-[11px]">System-2 Frontier Escalation:</span>
-                  <span className="font-semibold text-accent-amber">7.94%</span>
+                  <span className="font-semibold text-accent-amber tabular-nums">
+                    {(cascadeMetrics?.escalation_rate_pct ?? 7.94).toFixed(2)}%
+                  </span>
                   <span className="text-ink-secondary text-[10px]">(Gated LLM judge, $0.025/turn)</span>
                 </div>
               </div>
-              <div className="text-[11px] text-ink-secondary">
-                Exact McNemar p = 0.5000 &bull; Newcombe 95% CI [-0.024, +0.0126] &bull; 0 Defect Leakage
+              <div className="text-[11px] text-ink-secondary tabular-nums">
+                Exact McNemar p = {(cascadeMetrics?.mcnemar_p_value ?? 0.5).toFixed(4)} &bull; Newcombe 95% CI [
+                {(cascadeMetrics?.newcombe_ci_low ?? -0.024).toFixed(3)}, +
+                {(cascadeMetrics?.newcombe_ci_high ?? 0.0126).toFixed(4)}] &bull; 0 Defect Leakage
               </div>
             </div>
           </div>

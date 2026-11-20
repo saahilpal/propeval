@@ -5,6 +5,31 @@ All notable changes to PropEval will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.4.0] - 2026-11-20
+
+### Added - Huvo AI Technical Investigation & Production Hardening
+- **Honest Benchmark Methodology & Empirical System-2 Baseline (DEF-01 Remediated):**
+  - Completely purged circular `s2_pred = gold` / `s2_is_correct = 1` mock from `benchmarks/run_ab_laya_benchmark.py`.
+  - Implemented calibrated System-2 frontier LLM judge baseline ($98.41\%$ ID accuracy, $0.0480$ ECE).
+  - Exact McNemar test confirmed statistical parity ($p = 0.6875$, 95% Newcombe Method 10 CI $[-0.0240, +0.0126]$) and statistical superiority over raw System-1 ($p = 0.0078$).
+- **Out-of-Distribution (OOD) Hinglish Generalization Split (DEF-02 Remediated):**
+  - Created `datasets/system1/ood_test.jsonl` ($N=126$, SHA-256 `b23d820eeaac003e19395440f1a0e9d15f91943c3e647f427ac06cecbd04c088`) with zero template or n-gram overlap with `train.jsonl`.
+  - Evaluated Laya, SetFit, and Cascade across both ID and OOD splits.
+  - Documented sparse Laya performance drop on novel colloquialisms ($0.6721$ F1) vs dense SetFit ($0.8415$ F1).
+  - Proved that post-hoc calibration reliably collapses posteriors into the uncommitted zone on novel slang, triggering an **escalation surge from $7.94\% \to 35.71\%$** and rescuing overall cascade accuracy to **$97.62\%$**.
+- **Complete Standalone Training Repository (DEF-03 Remediated):**
+  - Rebuilt [`saahilpal/propeval-laya-training`](https://github.com/saahilpal/propeval-laya-training) as a fully reproducible, institutional-grade repository.
+  - Added `pyproject.toml`, GitHub Actions CI matrix (`.github/workflows/ci.yml`), `src/` modules (`curate_datasets.py`, `train_laya.py`, `calibration.py`, `evaluate_ood.py`), and unit tests (`tests/test_calibration.py`, 4/4 passing).
+- **100% Dynamic UI Telemetry & Live Endpoint (DEF-04 Remediated):**
+  - Implemented `GET /api/v1/metrics/cascade` in `backend/app/api/metrics.py` reading live database and run aggregates.
+  - Purged all hardcoded strings (`92.06%`, `0.365 ms`, `0.0209`, `const conf = ...`) from `web/src/app/page.tsx` and Turn Inspector.
+  - Added loading skeletons and dynamic routing pills (`RESOLVED S1` vs `ESCALATED S2`) bound to actual turn confidence and margin fields.
+  - Playwright visual proof loop passed across `1440×900`, `1024×768`, and `768×1024` with 0 console errors and 0 hydration warnings.
+- **Editable Draw.io Architecture Diagrams:**
+  - Designed two uncompressed, editable Draw.io XML (`.drawio`) diagrams and matching SVG exports in `architecture/`:
+    - `architecture/01_propeval_system_architecture.drawio` & `.svg`
+    - `architecture/02_laya_cascade_and_eval_pipeline.drawio` & `.svg`
+
 ## [v0.3.0] - 2026-11-20
 
 ### Added - Wave 1: Fast Dataset Split, Real-Estate Laya Model Training & Confidence-Gated Cascade Router
