@@ -23,7 +23,8 @@ This manifest certifies the curation, deduplication, and stratified splitting of
 | :--- | :--- | :--- | :--- | :--- |
 | **Train Set** | `datasets/system1/train.jsonl` | 70% Train | `1176` | `def11441bb2fff4ccae831c3d09851f50091214107a4d84ba1a1461d31c07a41` |
 | **Validation Set** | `datasets/system1/val.jsonl` | 15% Val | `252` | `01aeb881f657da6478f114244727efa2c6b61cdd2dc6d1c505d7b67134e7fb4d` |
-| **Sealed Blind Test** | `~/Desktop/propeval-blind-vault/sealed_blind_test.jsonl` | 15% Blind Test | `252` | `ff45cbfff04b6e082050792c8252ffa3f3bda100e41ba4f98ce5b32f92197d60` |
+| **Held-Out Test Set** | `datasets/system1/test.jsonl` | 15% Test | `252` | `ff45cbfff04b6e082050792c8252ffa3f3bda100e41ba4f98ce5b32f92197d60` |
+| **Sealed Blind Test Vault** | `~/Desktop/propeval-blind-vault/sealed_blind_test.jsonl` | 15% Blind Vault | `252` | `ff45cbfff04b6e082050792c8252ffa3f3bda100e41ba4f98ce5b32f92197d60` |
 
 The blind test checksum is sealed in:
 `~/Desktop/propeval-blind-vault/sealed_blind_test.sha256`

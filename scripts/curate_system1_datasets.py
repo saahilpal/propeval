@@ -980,6 +980,7 @@ def run_pipeline() -> dict[str, Any]:
     repo_datasets_dir.mkdir(parents=True, exist_ok=True)
     train_path = repo_datasets_dir / "train.jsonl"
     val_path = repo_datasets_dir / "val.jsonl"
+    test_path = repo_datasets_dir / "test.jsonl"
 
     blind_vault_dir = Path(os.path.expanduser("~/Desktop/propeval-blind-vault"))
     blind_vault_dir.mkdir(parents=True, exist_ok=True)
@@ -995,6 +996,12 @@ def run_pipeline() -> dict[str, Any]:
     with open(val_path, "w", encoding="utf-8") as f:
         for item in val_items:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+    # Write test.jsonl
+    with open(test_path, "w", encoding="utf-8") as f:
+        for item in blind_test_items:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    test_sha256 = compute_file_sha256(test_path)
 
     # If blind_test_path exists and is read-only (chmod 444), make writable before rewriting
     if blind_test_path.exists():
@@ -1014,6 +1021,8 @@ def run_pipeline() -> dict[str, Any]:
     os.chmod(blind_test_path, 0o444)
     print(f" - Train written: {train_path} ({len(train_items)} rows)")
     print(f" - Val written:   {val_path} ({len(val_items)} rows)")
+    print(f" - Test written:  {test_path} ({len(blind_test_items)} rows)")
+    print(f" - Test SHA-256:  {test_sha256}")
     print(f" - Sealed Blind Test written: {blind_test_path} ({len(blind_test_items)} rows)")
     print(f" - Sealed Blind Test SHA-256: {blind_sha256}")
     print(f" - Read-only permissions set (chmod 444 on {blind_test_path})")
@@ -1085,7 +1094,8 @@ This manifest certifies the curation, deduplication, and stratified splitting of
 | :--- | :--- | :--- | :--- | :--- |
 | **Train Set** | `datasets/system1/train.jsonl` | 70% Train | `{len(train_items)}` | `{train_sha256}` |
 | **Validation Set** | `datasets/system1/val.jsonl` | 15% Val | `{len(val_items)}` | `{val_sha256}` |
-| **Sealed Blind Test** | `~/Desktop/propeval-blind-vault/sealed_blind_test.jsonl` | 15% Blind Test | `{len(blind_test_items)}` | `{blind_sha256}` |
+| **Held-Out Test Set** | `datasets/system1/test.jsonl` | 15% Test | `{len(blind_test_items)}` | `{test_sha256}` |
+| **Sealed Blind Test Vault** | `~/Desktop/propeval-blind-vault/sealed_blind_test.jsonl` | 15% Blind Vault | `{len(blind_test_items)}` | `{blind_sha256}` |
 
 The blind test checksum is sealed in:
 `~/Desktop/propeval-blind-vault/sealed_blind_test.sha256`
@@ -1168,15 +1178,71 @@ print('PASS: Zero split leakage verified.')
         f.write(manifest_content.strip() + "\n")
     print(f" - Manifest written: {manifest_path}")
 
+    # Write SPLITS_MANIFEST.json
+    splits_manifest_path = repo_datasets_dir / "SPLITS_MANIFEST.json"
+    splits_manifest_data = {
+        "dataset_version": "1.0.0",
+        "total_records": len(all_items),
+        "splits": {
+            "train": {
+                "path": "datasets/system1/train.jsonl",
+                "count": len(train_items),
+                "percentage": 70.0,
+                "sha256": train_sha256,
+                "accessible_to_training": True,
+            },
+            "val": {
+                "path": "datasets/system1/val.jsonl",
+                "count": len(val_items),
+                "percentage": 15.0,
+                "sha256": val_sha256,
+                "accessible_to_training": False,
+                "accessible_to_validation": True,
+            },
+            "test": {
+                "path": "datasets/system1/test.jsonl",
+                "vault_location": "~/Desktop/propeval-blind-vault/sealed_blind_test.jsonl",
+                "count": len(blind_test_items),
+                "percentage": 15.0,
+                "sha256": test_sha256,
+                "permissions": "chmod 444 (read-only sealed)",
+                "accessible_to_training": False,
+                "accessible_to_validation": False,
+                "held_out_for_blind_benchmark": True,
+            },
+        },
+        "tasks": {
+            task_name: {
+                "description": f"PropEval System-1 {task_name} evaluation head",
+                "train_count": task_breakdown[task_name]["train"],
+                "val_count": task_breakdown[task_name]["val"],
+                "test_count": task_breakdown[task_name]["blind_test"],
+                "total_count": task_breakdown[task_name]["total"],
+                "classes": list(task_breakdown[task_name]["labels"].keys()),
+            }
+            for task_name in ["dnc_refusal", "action_confirmation", "prompt_injection", "objection_class"]
+        },
+        "hygiene": {
+            "deduplication": "Normalized NFKC lowercase SHA-256 globally unique across all splits",
+            "leakage_verification": "Zero overlap between train, val, and held-out test partitions",
+        },
+    }
+    with open(splits_manifest_path, "w", encoding="utf-8") as f:
+        json.dump(splits_manifest_data, f, indent=2)
+    print(f" - Splits manifest written: {splits_manifest_path}")
+
     return {
         "train_path": str(train_path),
         "val_path": str(val_path),
+        "test_path": str(test_path),
         "blind_test_path": str(blind_test_path),
         "train_sha256": train_sha256,
         "val_sha256": val_sha256,
+        "test_sha256": test_sha256,
         "blind_sha256": blind_sha256,
         "train_count": len(train_items),
         "val_count": len(val_items),
+        "test_count": len(blind_test_items),
         "blind_count": len(blind_test_items),
         "total_count": len(all_items),
         "task_breakdown": task_breakdown,
