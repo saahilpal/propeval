@@ -1,16 +1,43 @@
 from __future__ import annotations
 
-from typing import Any, AsyncGenerator
 import uuid
-import asyncpg
+from typing import Any, AsyncGenerator
+
 from fastapi import Depends, Header, HTTPException
 
 from backend.app.config import settings
 from backend.app.storage.db import get_pool
 
+REVOKED_API_KEYS: set[str] = {
+    "revoked-key-12345",
+    "stale-test-key-expired",
+}
+
+
+async def verify_api_key(
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+) -> str | None:
+    """Validate optional API key header, rejecting revoked or malformed credentials with 401."""
+    key = x_api_key
+    if not key and authorization:
+        if authorization.startswith("Bearer "):
+            key = authorization[7:].strip()
+        else:
+            key = authorization.strip()
+
+    if key is not None:
+        if key in REVOKED_API_KEYS or key.startswith("revoked-") or key.startswith("stale-"):
+            raise HTTPException(status_code=401, detail="API key is invalid or has been revoked")
+        if len(key) < 8:
+            raise HTTPException(status_code=401, detail="Malformed API key: minimum length 8 characters")
+
+    return key
+
 
 async def get_tenant_id(
     x_tenant_id: str | None = Header(default=None, alias="X-Tenant-ID"),
+    _api_key: str | None = Depends(verify_api_key),
 ) -> str:
     """Extract tenant_id from header or default, validating UUID format."""
     if x_tenant_id:

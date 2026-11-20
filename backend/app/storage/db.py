@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import cast
 
-import asyncio
 import asyncpg
 
 from backend.app.config import settings

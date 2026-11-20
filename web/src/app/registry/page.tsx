@@ -51,23 +51,23 @@ export default function RegistryPage() {
         </div>
 
         {/* Tab switch */}
-        <div className="flex items-center gap-2 text-xs font-mono">
+        <div className="flex items-center gap-1 bg-canvas p-1 rounded-md border border-border text-xs font-mono">
           <button
             onClick={() => setActiveTab("prompts")}
-            className={`px-3 py-1.5 rounded border transition-colors ${
+            className={`px-3 py-1 rounded transition-all duration-200 ${
               activeTab === "prompts"
-                ? "bg-ink-primary text-white border-ink-primary"
-                : "bg-surface text-ink-secondary border-border hover:bg-gray-100"
+                ? "bg-surface text-ink-primary font-semibold shadow-xs border border-border"
+                : "text-ink-secondary hover:text-ink-primary"
             }`}
           >
             Prompt Versions ({prompts.length})
           </button>
           <button
             onClick={() => setActiveTab("fixtures")}
-            className={`px-3 py-1.5 rounded border transition-colors ${
+            className={`px-3 py-1 rounded transition-all duration-200 ${
               activeTab === "fixtures"
-                ? "bg-ink-primary text-white border-ink-primary"
-                : "bg-surface text-ink-secondary border-border hover:bg-gray-100"
+                ? "bg-surface text-ink-primary font-semibold shadow-xs border border-border"
+                : "text-ink-secondary hover:text-ink-primary"
             }`}
           >
             RERA Fixtures ({fixtures.length})

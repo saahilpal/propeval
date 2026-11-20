@@ -185,4 +185,7 @@ async def test_worker_sigkill_reclamation_and_fencing():
         )
         assert done is True
 
+        # Clean up test tenant so no stale queued jobs remain
+        await conn.execute("DELETE FROM tenants WHERE id = $1", tenant_id)
+
     await close_db_pool()

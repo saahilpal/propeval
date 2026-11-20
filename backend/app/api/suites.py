@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+
 import asyncpg
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from backend.app.api.deps import get_db_connection, get_tenant_id
 from backend.app.evaluation.rubric_judge import sanitize_untrusted_transcript
@@ -55,7 +55,7 @@ async def register_suite(
     conn: asyncpg.Connection = Depends(get_db_connection),
 ):
     if len(body.scenarios_json) == 0:
-        raise HTTPException(status_code=400, detail="Scenario suite cannot be empty")
+        raise HTTPException(status_code=422, detail="Scenario suite cannot be empty: at least 1 scenario required")
 
     content_sha = compute_suite_hash(body.name, body.version_tag, body.scenarios_json)
     scenarios_raw = json.dumps(body.scenarios_json)
@@ -165,9 +165,18 @@ async def import_telephony_recordings(
     tenant_id: str = Depends(get_tenant_id),
     conn: asyncpg.Connection = Depends(get_db_connection),
 ):
+    if len(body.recordings) == 0:
+        raise HTTPException(status_code=422, detail="No recordings provided for import")
+
     scenarios = []
     for idx, rec in enumerate(body.recordings):
         raw_text = rec.get("raw_transcript", "")
+        # Protect against malformed UTF-8 surrogates or control null bytes
+        if isinstance(raw_text, str):
+            raw_text = raw_text.encode("utf-8", "surrogateescape").decode("utf-8", "replace").replace("\x00", "")
+        else:
+            raw_text = str(raw_text)
+
         # Sanitize against prompt injection special tokens & redact DPDP PII before saving
         sanitized = sanitize_untrusted_transcript(raw_text)
         redacted = redact_pii_dpdp(sanitized)

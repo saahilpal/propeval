@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchScenarioDetail, ScenarioDetailResponse, TurnDetail, AssertionDetail } from "@/lib/api";
-import { ArrowLeft, Check, X, AlertCircle, Wrench, RefreshCw } from "lucide-react";
+import { ArrowLeft, Check, X, AlertCircle, Wrench, ChevronDown, ChevronRight, Terminal } from "lucide-react";
 
 export default function ScenarioInspectorPage() {
   const params = useParams();
@@ -13,6 +13,7 @@ export default function ScenarioInspectorPage() {
 
   const [detail, setDetail] = useState<ScenarioDetailResponse | null>(null);
   const [showRawBuyerText, setShowRawBuyerText] = useState<boolean>(false);
+  const [expandedToolCalls, setExpandedToolCalls] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -29,6 +30,10 @@ export default function ScenarioInspectorPage() {
     loadScenario();
   }, [runId, scenarioId]);
 
+  const toggleToolCall = (key: string) => {
+    setExpandedToolCalls((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center p-12 text-xs font-mono text-ink-secondary">
@@ -39,16 +44,15 @@ export default function ScenarioInspectorPage() {
 
   const baseline = detail?.baseline;
   const candidate = detail?.candidate;
-  const maxTurns = Math.max(baseline?.turns.length || 0, candidate?.turns.length || 0);
 
   return (
-    <div className="flex-1 flex flex-col p-6 max-w-7xl mx-auto w-full gap-6">
+    <div className="flex-1 flex flex-col p-6 max-w-7xl mx-auto w-full gap-6 text-ink-primary">
       {/* Top Breadcrumb & Controls */}
-      <div className="flex items-center justify-between border-b border-border pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-xs font-mono text-ink-secondary hover:text-ink-primary px-2 py-1 rounded border border-border bg-surface"
+            className="flex items-center gap-1.5 text-xs font-mono text-ink-secondary hover:text-ink-primary px-3 py-1.5 rounded-md border border-border bg-surface transition-colors shadow-xs"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Workbench</span>
@@ -62,14 +66,14 @@ export default function ScenarioInspectorPage() {
         </div>
 
         <div className="flex items-center gap-4 text-xs font-mono">
-          <label className="flex items-center gap-2 cursor-pointer bg-surface border border-border px-3 py-1.5 rounded shadow-sm">
+          <label className="flex items-center gap-2 cursor-pointer bg-surface border border-border px-3 py-1.5 rounded-md shadow-xs">
             <input
               type="checkbox"
               checked={showRawBuyerText}
               onChange={(e) => setShowRawBuyerText(e.target.checked)}
               className="rounded text-ink-primary focus:ring-0"
             />
-            <span className="text-ink-secondary">Toggle Raw FSM Intent vs 8 kHz ASR</span>
+            <span className="text-ink-secondary">Toggle Raw Intent vs 8 kHz Telephony ASR</span>
           </label>
         </div>
       </div>
@@ -84,7 +88,7 @@ export default function ScenarioInspectorPage() {
                 Baseline (V1)
               </span>
               <span
-                className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
                   baseline?.overall_pass ? "bg-accent-emeraldBg text-accent-emerald" : "bg-accent-crimsonBg text-accent-crimson"
                 }`}
               >
@@ -98,49 +102,78 @@ export default function ScenarioInspectorPage() {
 
           <div className="flex flex-col gap-4">
             {baseline?.turns.map((t, idx) => (
-              <div key={idx} className="border border-border rounded-md bg-surface p-4 text-xs shadow-sm flex flex-col gap-2.5">
-                <div className="flex items-center justify-between text-[11px] font-mono text-ink-secondary border-b border-gray-100 pb-1.5">
+              <div key={idx} className="border border-border rounded-lg bg-surface p-4 text-xs shadow-sm flex flex-col gap-3">
+                <div className="flex items-center justify-between text-[11px] font-mono text-ink-secondary border-b border-gray-100 pb-2">
                   <span className="font-semibold text-ink-primary">Turn {t.turn_index}</span>
-                  <span>FSM: {t.fsm_state}</span>
+                  <span className="bg-canvas border border-border px-1.5 py-0.5 rounded text-[10px]">FSM: {t.fsm_state}</span>
                 </div>
 
                 {/* Buyer Utterance */}
-                <div className="bg-canvas border border-border rounded p-2.5">
+                <div className="bg-canvas border border-border rounded-md p-3">
                   <div className="text-[10px] uppercase font-mono text-ink-secondary mb-1">
-                    {showRawBuyerText ? "Raw FSM Intent" : "8 kHz Perturbed Hinglish"}
+                    {showRawBuyerText ? "Raw FSM Intent" : "8 kHz Telephony Perturbed Audio"}
                   </div>
-                  <div className="text-ink-primary font-mono text-xs">
+                  <div className="text-ink-primary font-mono text-xs leading-relaxed break-words">
                     {showRawBuyerText ? t.buyer_raw_text : t.buyer_perturbed_text}
                   </div>
                 </div>
 
                 {/* Agent Response */}
-                <div className="p-2.5 bg-blue-50/40 border border-blue-100 rounded">
+                <div className="p-3 bg-blue-50/40 border border-blue-100 rounded-md">
                   <div className="text-[10px] uppercase font-mono text-accent-cobalt mb-1 font-semibold">
                     Agent Utterance ({t.ttft_ms}ms TTFT)
                   </div>
-                  <div className="text-ink-primary text-xs leading-relaxed font-sans">{t.agent_text}</div>
+                  <div className="text-ink-primary text-xs leading-relaxed font-sans break-words">{t.agent_text}</div>
                 </div>
 
-                {/* Tool Calls */}
+                {/* Tool Calls with Animated Disclosure */}
                 {t.tool_calls.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-1">
+                  <div className="flex flex-col gap-2 pt-1">
                     {t.tool_calls.map((tc, tcIdx) => {
                       const name = tc.name || tc.function?.name || "tool";
                       const outcome = t.tool_outcomes[tcIdx];
                       const isOk = outcome?.status_code === 200 || outcome?.status_code === 201;
+                      const drawerKey = `base_${idx}_${tcIdx}`;
+                      const isExpanded = Boolean(expandedToolCalls[drawerKey]);
+
                       return (
-                        <div
-                          key={tcIdx}
-                          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-mono border ${
-                            isOk
-                              ? "bg-accent-emeraldBg border-accent-emerald/30 text-accent-emerald"
-                              : "bg-accent-crimsonBg border-accent-crimson/30 text-accent-crimson"
-                          }`}
-                        >
-                          <Wrench className="w-3 h-3" />
-                          <span>{name}</span>
-                          <span className="font-bold">{outcome?.status_code || 200}</span>
+                        <div key={tcIdx} className="border border-border rounded-md overflow-hidden font-mono text-[11px]">
+                          <button
+                            onClick={() => toggleToolCall(drawerKey)}
+                            className="w-full flex items-center justify-between p-2 bg-canvas hover:bg-gray-100/80 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Wrench className="w-3.5 h-3.5 text-ink-secondary" />
+                              <span className="font-semibold text-ink-primary">{name}</span>
+                              <span
+                                className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                                  isOk
+                                    ? "bg-accent-emeraldBg text-accent-emerald"
+                                    : "bg-accent-crimsonBg text-accent-crimson"
+                                }`}
+                              >
+                                {outcome?.status_code || 200}
+                              </span>
+                            </div>
+                            {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          </button>
+
+                          {isExpanded && (
+                            <div className="p-3 bg-white border-t border-border space-y-2">
+                              <div>
+                                <div className="text-[10px] text-ink-secondary uppercase">Arguments:</div>
+                                <pre className="bg-canvas p-2 rounded text-[10px] overflow-x-auto border border-border mt-0.5">
+                                  {JSON.stringify(tc.arguments || tc.args || {}, null, 2)}
+                                </pre>
+                              </div>
+                              <div>
+                                <div className="text-[10px] text-ink-secondary uppercase">Result / Outcome:</div>
+                                <pre className="bg-canvas p-2 rounded text-[10px] overflow-x-auto border border-border mt-0.5">
+                                  {JSON.stringify(outcome || { status: "OK" }, null, 2)}
+                                </pre>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -159,7 +192,7 @@ export default function ScenarioInspectorPage() {
                 Candidate (V2)
               </span>
               <span
-                className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
                   candidate?.overall_pass ? "bg-accent-emeraldBg text-accent-emerald" : "bg-accent-crimsonBg text-accent-crimson"
                 }`}
               >
@@ -173,7 +206,6 @@ export default function ScenarioInspectorPage() {
 
           <div className="flex flex-col gap-4">
             {candidate?.turns.map((t, idx) => {
-              // Check if any assertion failed on this turn
               const failedAssertions = candidate?.assertions.filter(
                 (a) => !a.passed && (a.failure_stage === "TOOL_CONTRACT" || a.failure_stage === "FACT_HALLUCINATION")
               );
@@ -181,65 +213,94 @@ export default function ScenarioInspectorPage() {
               return (
                 <div
                   key={idx}
-                  className={`border rounded-md bg-surface p-4 text-xs shadow-sm flex flex-col gap-2.5 ${
+                  className={`border rounded-lg bg-surface p-4 text-xs shadow-sm flex flex-col gap-3 ${
                     failedAssertions && failedAssertions.length > 0
                       ? "border-accent-crimson/60 ring-1 ring-accent-crimson/20"
                       : "border-border"
                   }`}
                 >
-                  <div className="flex items-center justify-between text-[11px] font-mono text-ink-secondary border-b border-gray-100 pb-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-ink-secondary border-b border-gray-100 pb-2">
                     <span className="font-semibold text-ink-primary">Turn {t.turn_index}</span>
-                    <span>FSM: {t.fsm_state}</span>
+                    <span className="bg-canvas border border-border px-1.5 py-0.5 rounded text-[10px]">FSM: {t.fsm_state}</span>
                   </div>
 
                   {/* Buyer Utterance */}
-                  <div className="bg-canvas border border-border rounded p-2.5">
+                  <div className="bg-canvas border border-border rounded-md p-3">
                     <div className="text-[10px] uppercase font-mono text-ink-secondary mb-1">
-                      {showRawBuyerText ? "Raw FSM Intent" : "8 kHz Perturbed Hinglish"}
+                      {showRawBuyerText ? "Raw FSM Intent" : "8 kHz Telephony Perturbed Audio"}
                     </div>
-                    <div className="text-ink-primary font-mono text-xs">
+                    <div className="text-ink-primary font-mono text-xs leading-relaxed break-words">
                       {showRawBuyerText ? t.buyer_raw_text : t.buyer_perturbed_text}
                     </div>
                   </div>
 
                   {/* Agent Response */}
-                  <div className="p-2.5 bg-blue-50/40 border border-blue-100 rounded">
+                  <div className="p-3 bg-blue-50/40 border border-blue-100 rounded-md">
                     <div className="text-[10px] uppercase font-mono text-accent-cobalt mb-1 font-semibold">
                       Agent Utterance ({t.ttft_ms}ms TTFT)
                     </div>
-                    <div className="text-ink-primary text-xs leading-relaxed font-sans">{t.agent_text}</div>
+                    <div className="text-ink-primary text-xs leading-relaxed font-sans break-words">{t.agent_text}</div>
                   </div>
 
                   {/* Inline Red Assertion Callout */}
                   {failedAssertions && failedAssertions.length > 0 && idx === candidate.turns.length - 1 && (
-                    <div className="p-2.5 bg-accent-crimsonBg border border-accent-crimson/40 rounded flex items-start gap-2 text-accent-crimson">
+                    <div className="p-3 bg-accent-crimsonBg border border-accent-crimson/40 rounded-md flex items-start gap-2 text-accent-crimson">
                       <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                       <div className="text-[11px] font-mono">
                         <div className="font-bold">Assertion Failure: {failedAssertions[0].metric_name}</div>
-                        <div>{failedAssertions[0].rationale?.reason || "Contract violated"}</div>
+                        <div>{failedAssertions[0].rationale?.reason || "Contract or Fact Grounding violated"}</div>
                       </div>
                     </div>
                   )}
 
-                  {/* Tool Calls */}
+                  {/* Tool Calls with Animated Disclosure */}
                   {t.tool_calls.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-1">
+                    <div className="flex flex-col gap-2 pt-1">
                       {t.tool_calls.map((tc, tcIdx) => {
                         const name = tc.name || tc.function?.name || "tool";
                         const outcome = t.tool_outcomes[tcIdx];
                         const isOk = outcome?.status_code === 200 || outcome?.status_code === 201;
+                        const drawerKey = `cand_${idx}_${tcIdx}`;
+                        const isExpanded = Boolean(expandedToolCalls[drawerKey]);
+
                         return (
-                          <div
-                            key={tcIdx}
-                            className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-mono border ${
-                              isOk
-                                ? "bg-accent-emeraldBg border-accent-emerald/30 text-accent-emerald"
-                                : "bg-accent-crimsonBg border-accent-crimson/30 text-accent-crimson font-bold"
-                            }`}
-                          >
-                            <Wrench className="w-3 h-3" />
-                            <span>{name}</span>
-                            <span>{outcome?.status_code || 200}</span>
+                          <div key={tcIdx} className="border border-border rounded-md overflow-hidden font-mono text-[11px]">
+                            <button
+                              onClick={() => toggleToolCall(drawerKey)}
+                              className="w-full flex items-center justify-between p-2 bg-canvas hover:bg-gray-100/80 transition-colors"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Wrench className="w-3.5 h-3.5 text-ink-secondary" />
+                                <span className="font-semibold text-ink-primary">{name}</span>
+                                <span
+                                  className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                                    isOk
+                                      ? "bg-accent-emeraldBg text-accent-emerald"
+                                      : "bg-accent-crimsonBg text-accent-crimson font-bold"
+                                  }`}
+                                >
+                                  {outcome?.status_code || 200}
+                                </span>
+                              </div>
+                              {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                            </button>
+
+                            {isExpanded && (
+                              <div className="p-3 bg-white border-t border-border space-y-2">
+                                <div>
+                                  <div className="text-[10px] text-ink-secondary uppercase">Arguments:</div>
+                                  <pre className="bg-canvas p-2 rounded text-[10px] overflow-x-auto border border-border mt-0.5">
+                                    {JSON.stringify(tc.arguments || tc.args || {}, null, 2)}
+                                  </pre>
+                                </div>
+                                <div>
+                                  <div className="text-[10px] text-ink-secondary uppercase">Result / Outcome:</div>
+                                  <pre className="bg-canvas p-2 rounded text-[10px] overflow-x-auto border border-border mt-0.5">
+                                    {JSON.stringify(outcome || { status: "OK" }, null, 2)}
+                                  </pre>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -252,32 +313,32 @@ export default function ScenarioInspectorPage() {
         </div>
       </div>
 
-      {/* Bottom Summary: Extracted Lead JSON Comparison */}
-      <section className="bg-surface border border-border rounded-md p-6 shadow-sm flex flex-col gap-3">
+      {/* Bottom Summary: Assertions Breakdown */}
+      <section className="bg-surface border border-border rounded-lg p-6 shadow-sm flex flex-col gap-3">
         <h3 className="text-xs font-mono uppercase font-bold text-ink-secondary tracking-wider">
           Extracted Lead Slots &amp; Assertions Breakdown
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-mono">
-          <div className="border border-border rounded p-4 bg-canvas">
+          <div className="border border-border rounded-md p-4 bg-canvas">
             <div className="font-semibold text-ink-primary mb-2">Baseline Assertions:</div>
-            <ul className="space-y-1 text-[11px]">
+            <ul className="space-y-1.5 text-[11px]">
               {baseline?.assertions.map((a, i) => (
                 <li key={i} className="flex items-center gap-2">
-                  {a.passed ? <Check className="w-3.5 h-3.5 text-accent-emerald" /> : <X className="w-3.5 h-3.5 text-accent-crimson" />}
-                  <span>{a.metric_name}</span>
+                  {a.passed ? <Check className="w-3.5 h-3.5 text-accent-emerald shrink-0" /> : <X className="w-3.5 h-3.5 text-accent-crimson shrink-0" />}
+                  <span className="font-medium">{a.metric_name}</span>
                   <span className="text-ink-secondary">({a.layer})</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="border border-border rounded p-4 bg-canvas">
+          <div className="border border-border rounded-md p-4 bg-canvas">
             <div className="font-semibold text-ink-primary mb-2">Candidate Assertions:</div>
-            <ul className="space-y-1 text-[11px]">
+            <ul className="space-y-1.5 text-[11px]">
               {candidate?.assertions.map((a, i) => (
                 <li key={i} className="flex items-center gap-2">
-                  {a.passed ? <Check className="w-3.5 h-3.5 text-accent-emerald" /> : <X className="w-3.5 h-3.5 text-accent-crimson" />}
-                  <span>{a.metric_name}</span>
+                  {a.passed ? <Check className="w-3.5 h-3.5 text-accent-emerald shrink-0" /> : <X className="w-3.5 h-3.5 text-accent-crimson shrink-0" />}
+                  <span className="font-medium">{a.metric_name}</span>
                   <span className="text-ink-secondary">({a.layer})</span>
                 </li>
               ))}

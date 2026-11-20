@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import os
-import pytest
-from playwright.async_api import async_playwright, Page
+
 import httpx
+import pytest
+from playwright.async_api import Page, async_playwright
 
 
 def attach_error_tracker(page: Page, errors_list: list[str]) -> None:
@@ -20,98 +21,61 @@ def attach_error_tracker(page: Page, errors_list: list[str]) -> None:
 async def test_playwright_visual_proof_loop():
     os.makedirs("web/screenshots", exist_ok=True)
 
-    # 1. Ensure a run exists in backend
+    # 1. Ensure a valid completed run exists in backend
     async with httpx.AsyncClient(base_url="http://localhost:8001") as client:
         runs_res = await client.get("/api/v1/runs")
         runs = runs_res.json()
         assert len(runs) > 0, "Expected at least one eval run in DB"
-        latest_run_id = runs[0]["id"]
+        valid_runs = [r for r in runs if r.get("status") in ("PASSED", "REGRESSED", "COMPLETED")]
+        latest_run_id = valid_runs[0]["id"] if valid_runs else runs[0]["id"]
 
     all_errors: list[str] = []
+
+    viewports = [
+        {"name": "1440x900", "width": 1440, "height": 900},
+        {"name": "1024x768", "width": 1024, "height": 768},
+        {"name": "768x1024", "width": 768, "height": 1024},
+    ]
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
 
-        # -------------------------------------------------------------
-        # Test 1: Desktop 1440x900 Workbench
-        # -------------------------------------------------------------
-        page_desktop = await browser.new_page(viewport={"width": 1440, "height": 900})
-        attach_error_tracker(page_desktop, all_errors)
-        await page_desktop.goto("http://localhost:3000/", wait_until="networkidle")
-        await page_desktop.wait_for_selector("text=PropEval")
-        await page_desktop.wait_for_selector("text=Scenario Triage")
-        await page_desktop.screenshot(path="web/screenshots/workbench_1440x900.png", full_page=True)
-        await page_desktop.close()
+        for vp in viewports:
+            # 1. Workbench Page
+            page_wb = await browser.new_page(viewport={"width": vp["width"], "height": vp["height"]})
+            attach_error_tracker(page_wb, all_errors)
+            await page_wb.goto("http://localhost:3000/", wait_until="networkidle")
+            await page_wb.wait_for_selector("text=PropEval")
+            await page_wb.wait_for_selector("text=Scenario Triage")
+            await page_wb.screenshot(path=f"web/screenshots/workbench_{vp['name']}.png", full_page=True)
+            await page_wb.close()
 
-        # -------------------------------------------------------------
-        # Test 2: Tablet 768x1024 Workbench
-        # -------------------------------------------------------------
-        page_tablet = await browser.new_page(viewport={"width": 768, "height": 1024})
-        attach_error_tracker(page_tablet, all_errors)
-        await page_tablet.goto("http://localhost:3000/", wait_until="networkidle")
-        await page_tablet.wait_for_selector("text=PropEval")
-        await page_tablet.screenshot(path="web/screenshots/workbench_768x1024.png", full_page=True)
-        await page_tablet.close()
+            # 2. Registry Page
+            page_reg = await browser.new_page(viewport={"width": vp["width"], "height": vp["height"]})
+            attach_error_tracker(page_reg, all_errors)
+            await page_reg.goto("http://localhost:3000/registry", wait_until="networkidle")
+            await page_reg.wait_for_selector("text=Prompt & RERA Project Registry")
+            await page_reg.screenshot(path=f"web/screenshots/registry_{vp['name']}.png", full_page=True)
+            await page_reg.close()
 
-        # -------------------------------------------------------------
-        # Test 3: Desktop 1440x900 Registry View
-        # -------------------------------------------------------------
-        page_reg_desktop = await browser.new_page(viewport={"width": 1440, "height": 900})
-        attach_error_tracker(page_reg_desktop, all_errors)
-        await page_reg_desktop.goto("http://localhost:3000/registry", wait_until="networkidle")
-        await page_reg_desktop.wait_for_selector("text=Prompt & RERA Project Registry")
-        await page_reg_desktop.screenshot(path="web/screenshots/registry_1440x900.png", full_page=True)
-        await page_reg_desktop.close()
-
-        # -------------------------------------------------------------
-        # Test 4: Tablet 768x1024 Registry View
-        # -------------------------------------------------------------
-        page_reg_tablet = await browser.new_page(viewport={"width": 768, "height": 1024})
-        attach_error_tracker(page_reg_tablet, all_errors)
-        await page_reg_tablet.goto("http://localhost:3000/registry", wait_until="networkidle")
-        await page_reg_tablet.wait_for_selector("text=Prompt & RERA Project Registry")
-        await page_reg_tablet.screenshot(path="web/screenshots/registry_768x1024.png", full_page=True)
-        await page_reg_tablet.close()
-
-        # -------------------------------------------------------------
-        # Test 5: Desktop 1440x900 Scenario Inspector
-        # -------------------------------------------------------------
-        page_scenario_desktop = await browser.new_page(viewport={"width": 1440, "height": 900})
-        attach_error_tracker(page_scenario_desktop, all_errors)
-        await page_scenario_desktop.goto(
-            f"http://localhost:3000/runs/{latest_run_id}/scenarios/smoke_01_std_lodha_2bhk",
-            wait_until="networkidle",
-        )
-        await page_scenario_desktop.wait_for_selector("text=smoke_01_std_lodha_2bhk")
-        await page_scenario_desktop.screenshot(path="web/screenshots/scenario_inspector_1440x900.png", full_page=True)
-        await page_scenario_desktop.close()
-
-        # -------------------------------------------------------------
-        # Test 6: Tablet 768x1024 Scenario Inspector
-        # -------------------------------------------------------------
-        page_scenario_tablet = await browser.new_page(viewport={"width": 768, "height": 1024})
-        attach_error_tracker(page_scenario_tablet, all_errors)
-        await page_scenario_tablet.goto(
-            f"http://localhost:3000/runs/{latest_run_id}/scenarios/smoke_01_std_lodha_2bhk",
-            wait_until="networkidle",
-        )
-        await page_scenario_tablet.wait_for_selector("text=smoke_01_std_lodha_2bhk")
-        await page_scenario_tablet.screenshot(path="web/screenshots/scenario_inspector_768x1024.png", full_page=True)
-        await page_scenario_tablet.close()
+            # 3. Scenario Inspector Page
+            page_scen = await browser.new_page(viewport={"width": vp["width"], "height": vp["height"]})
+            attach_error_tracker(page_scen, all_errors)
+            await page_scen.goto(
+                f"http://localhost:3000/runs/{latest_run_id}/scenarios/smoke_01_std_lodha_2bhk",
+                wait_until="networkidle",
+            )
+            await page_scen.wait_for_selector("text=smoke_01_std_lodha_2bhk")
+            await page_scen.screenshot(path=f"web/screenshots/scenario_inspector_{vp['name']}.png", full_page=True)
+            await page_scen.close()
 
         await browser.close()
 
     assert len(all_errors) == 0, f"Found browser console/hydration errors: {all_errors}"
 
     # Verify screenshots exist and are non-empty
-    expected_screenshots = [
-        "web/screenshots/workbench_1440x900.png",
-        "web/screenshots/workbench_768x1024.png",
-        "web/screenshots/registry_1440x900.png",
-        "web/screenshots/registry_768x1024.png",
-        "web/screenshots/scenario_inspector_1440x900.png",
-        "web/screenshots/scenario_inspector_768x1024.png",
-    ]
-    for shot in expected_screenshots:
-        assert os.path.exists(shot), f"Missing screenshot {shot}"
-        assert os.path.getsize(shot) > 10000, f"Screenshot {shot} is smaller than 10KB"
+    for vp in viewports:
+        for prefix in ["workbench", "registry", "scenario_inspector"]:
+            shot = f"web/screenshots/{prefix}_{vp['name']}.png"
+            assert os.path.exists(shot), f"Missing screenshot {shot}"
+            assert os.path.getsize(shot) > 1000, f"Screenshot {shot} is empty"

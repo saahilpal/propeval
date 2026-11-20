@@ -3,16 +3,16 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
 import sys
-from typing import Any
 import uuid
+from typing import Any
+
 import yaml
 
 from backend.app.config import settings
-from backend.app.engine.worker import execute_eval_job, finalize_eval_run
+from backend.app.engine.worker import execute_eval_job
 from backend.app.storage.budget import create_budget_reservation
-from backend.app.storage.db import close_pool, get_pool
+from backend.app.storage.db import get_pool
 
 
 def parse_args():
@@ -211,9 +211,9 @@ async def run_cli_comparison(
                     })
 
     # 8. Execute all jobs
-    print(f"\n================================================================================")
+    print("\n================================================================================")
     print(f"PropEval CLI: Executing {len(job_records)} jobs across {len(scenarios)} scenarios (K={trials_k})")
-    print(f"================================================================================\n")
+    print("================================================================================\n")
 
     for idx, jr in enumerate(job_records):
         async with pool.acquire() as conn:

@@ -81,6 +81,7 @@ export interface ScenarioComparison {
   is_regression: boolean;
   is_hard_gate_fail: boolean;
   is_quarantined: boolean;
+  has_anti_cheat_flag?: boolean;
   baseline: {
     job_id: string;
     status: string;
@@ -89,6 +90,7 @@ export interface ScenarioComparison {
     extraction_f1: number;
     cost_usd: number;
     p95_ttft_ms: number | null;
+    has_anti_cheat_flag?: boolean;
   };
   candidate: {
     job_id: string;
@@ -98,6 +100,7 @@ export interface ScenarioComparison {
     extraction_f1: number;
     cost_usd: number;
     p95_ttft_ms: number | null;
+    has_anti_cheat_flag?: boolean;
   };
 }
 

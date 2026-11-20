@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import uuid
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from backend.app.config import settings
 from backend.app.main import app
 from backend.app.storage.db import get_pool
-
 
 TENANT_A = "00000000-0000-0000-0000-000000000001"
 TENANT_B = "00000000-0000-0000-0000-000000000002"

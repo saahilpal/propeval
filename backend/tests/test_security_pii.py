@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import pytest
-
-from backend.app.providers.webhook_adapter import SSRFSecurityError, is_safe_webhook_url
+from backend.app.providers.webhook_adapter import is_safe_webhook_url
 from backend.app.security.pii_redactor import (
     redact_pii_dpdp,
     validate_verhoeff_aadhaar,

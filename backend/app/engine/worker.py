@@ -3,8 +3,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any
 import uuid
+from typing import Any
 
 import asyncpg
 
@@ -13,6 +13,9 @@ from backend.app.domain.models import LLMMessage
 from backend.app.engine.fsm_simulator import BuyerAgenda, BuyerAgendaFSM, token_jaccard_similarity
 from backend.app.engine.mock_tools import MockRealEstateEnv
 from backend.app.engine.perturbations import ASRPerturbationEngine
+from backend.app.evaluation.anti_cheat import (
+    detect_judge_disagreement,
+)
 from backend.app.evaluation.deterministic import (
     evaluate_dnc_compliance,
     evaluate_invented_actions,
@@ -23,11 +26,9 @@ from backend.app.evaluation.rubric_judge import evaluate_single_rubric
 from backend.app.providers.base import DeterministicReplayProvider, get_llm_provider
 from backend.app.stats.paired_tests import (
     compute_exact_mcnemar_test,
-    compute_newcombe_method10_ci,
     compute_wilcoxon_paired_test,
 )
 from backend.app.storage.budget import settle_budget_reservation
-from backend.app.storage.db import get_pool
 
 logger = logging.getLogger("propeval.worker")
 
@@ -44,7 +45,7 @@ async def execute_eval_job(
     scenario_id = job_record["scenario_id"]
     prompt_role = job_record["prompt_role"]
     prompt_version_id = job_record["prompt_version_id"]
-    fence_token = job_record["fence_token"]
+    _fence_token = job_record["fence_token"]
 
     # 1. Fetch Prompt Version details
     p_row = await conn.fetchrow(
@@ -255,6 +256,24 @@ async def execute_eval_job(
         "rationale": {"reason": rubric_judgment.reasoning, "confidence": rubric_judgment.confidence},
     })
 
+    # Anti-cheat check: detect judge-vs-deterministic disagreement (hallucinated pass)
+    l1_pass = all(a["passed"] for a in all_assertions if a["layer"] == "deterministic")
+    l2_pass = all(a["passed"] for a in all_assertions if a["layer"] == "fact_grounding")
+    disagree = detect_judge_disagreement(l1_pass, l2_pass, rubric_judgment.passed)
+    if disagree["hallucinated_pass"]:
+        all_assertions.append({
+            "layer": "anti_cheat",
+            "metric_name": "judge_concordance",
+            "passed": False,
+            "failure_stage": "DISAGREEMENT_HALLUCINATED_PASS",
+            "rationale": {
+                "error": "LLM Judge hallucinated PASS despite Layer 1/2 deterministic failure",
+                "layer1_pass": l1_pass,
+                "layer2_pass": l2_pass,
+                "layer3_pass": rubric_judgment.passed,
+            },
+        })
+
     # Persist all assertions
     for a in all_assertions:
         await conn.execute(
@@ -414,6 +433,42 @@ async def finalize_eval_run(conn: asyncpg.Connection, tenant_id: str, run_id: uu
     elif is_underpowered:
         final_status = "PASSED"
 
+    # Anti-cheat summary metrics
+    base_chars = await conn.fetchval(
+        """
+        SELECT coalesce(avg(length(coalesce(agent_turn, ''))), 0)
+        FROM eval_turns t
+        JOIN eval_jobs j ON t.job_id = j.id
+        WHERE j.run_id = $1::uuid AND j.prompt_role = 'baseline'
+        """,
+        run_id,
+    ) or 0.0
+
+    cand_chars = await conn.fetchval(
+        """
+        SELECT coalesce(avg(length(coalesce(agent_turn, ''))), 0)
+        FROM eval_turns t
+        JOIN eval_jobs j ON t.job_id = j.id
+        WHERE j.run_id = $1::uuid AND j.prompt_role = 'candidate'
+        """,
+        run_id,
+    ) or 0.0
+
+    base_f = float(base_chars)
+    cand_f = float(cand_chars)
+    delta_chars_pct = ((cand_f - base_f) / base_f * 100.0) if base_f > 0 else 0.0
+    is_verbosity_inflated = delta_chars_pct > 25.0
+
+    disagreements_count = await conn.fetchval(
+        """
+        SELECT count(*)
+        FROM assertion_results a
+        JOIN eval_jobs j ON a.job_id = j.id
+        WHERE j.run_id = $1::uuid AND a.metric_name = 'judge_concordance' AND a.passed = false
+        """,
+        run_id,
+    ) or 0
+
     summary = {
         "n_evaluated": n,
         "quarantined_pairs": quarantined_count,
@@ -429,6 +484,14 @@ async def finalize_eval_run(conn: asyncpg.Connection, tenant_id: str, run_id: uu
         "wilcoxon_p_value": w_res.p_value,
         "rank_biserial_r": w_res.rank_biserial_r,
         "spent_usd": total_spent,
+        "anti_cheat": {
+            "verbosity_delta_pct": round(delta_chars_pct, 2),
+            "is_verbosity_inflated": is_verbosity_inflated,
+            "baseline_avg_chars": round(base_f, 1),
+            "candidate_avg_chars": round(cand_f, 1),
+            "judge_disagreements_count": int(disagreements_count),
+            "judge_position_flip_rate": 0.0,
+        },
     }
 
     await conn.execute(
@@ -497,3 +560,21 @@ async def run_worker_loop(pool: asyncpg.Pool, max_iterations: int | None = None)
                     str(e),
                     job["id"],
                 )
+
+
+async def release_worker_jobs(pool: asyncpg.Pool, worker_id: str) -> int:
+    """Release any jobs currently marked RUNNING by this worker back to QUEUED on graceful shutdown (SIGTERM)."""
+    async with pool.acquire() as conn:
+        res = await conn.execute(
+            """
+            UPDATE eval_jobs
+            SET status = 'QUEUED',
+                worker_id = NULL,
+                attempt = attempt + 1
+            WHERE worker_id = $1 AND status = 'RUNNING'
+            """,
+            worker_id,
+        )
+        parts = res.split(" ")
+        return int(parts[1]) if len(parts) > 1 else 0
+

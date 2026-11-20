@@ -1,7 +1,7 @@
 """Initial schema with 13 tables, split partial indexes, RLS, and claim_next_eval_job.
 
 Revision ID: 0001
-Revises: 
+Revises:
 Create Date: 2026-11-20 11:30:00.000000
 """
 from __future__ import annotations

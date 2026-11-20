@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-
 from backend.app.evaluation.deterministic import (
     evaluate_dnc_compliance,
     evaluate_invented_actions,

@@ -5,9 +5,10 @@ import hashlib
 import json
 from typing import Any
 from uuid import UUID, uuid4
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+
 import asyncpg
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.app.api.deps import get_db_connection, get_tenant_id
@@ -96,7 +97,7 @@ async def create_eval_run(
         # 2. Insert eval_run
         run_id = uuid4()
         grader_sha = "0000000000000000000000000000000000000000000000000000000000000000"
-        
+
         await conn.execute(
             """
             INSERT INTO eval_runs (
@@ -360,7 +361,7 @@ async def get_run_diff(
 @router.get("/{run_id}/scenarios")
 async def list_run_scenarios(
     run_id: str,
-    filter_mode: str = Query(default="all"),  # 'all', 'regressions', 'hard_gate_fails', 'quarantined'
+    filter_mode: str = Query(default="all"),  # 'all', 'regressions', 'hard_gate_fails', 'anti_cheat_flags', 'quarantined'
     tenant_id: str = Depends(get_tenant_id),
     conn: asyncpg.Connection = Depends(get_db_connection),
 ):
@@ -376,6 +377,23 @@ async def list_run_scenarios(
         run_id,
     )
 
+    # Check for anti-cheat / disagreement flags
+    anti_cheat_job_ids = set()
+    anti_cheat_rows = await conn.fetch(
+        """
+        SELECT j.id
+        FROM assertion_results a
+        JOIN eval_jobs j ON j.id = a.job_id
+        WHERE j.tenant_id = $1::uuid AND j.run_id = $2::uuid
+          AND (a.layer = 'anti_cheat' OR a.metric_name = 'judge_concordance')
+          AND a.passed = false
+        """,
+        tenant_id,
+        run_id,
+    )
+    for r in anti_cheat_rows:
+        anti_cheat_job_ids.add(str(r["id"]))
+
     pairs: dict[str, dict[str, Any]] = {}
     for j in jobs:
         key = f"{j['scenario_id']}_{j['trial_index']}"
@@ -389,6 +407,7 @@ async def list_run_scenarios(
             "extraction_f1": float(j["extraction_f1"] or 0.0),
             "cost_usd": float(j["cost_usd"] or 0.0),
             "p95_ttft_ms": j["p95_ttft_ms"],
+            "has_anti_cheat_flag": str(j["id"]) in anti_cheat_job_ids,
         }
 
     results = []
@@ -399,10 +418,13 @@ async def list_run_scenarios(
         is_regression = (base.get("overall_pass") is True) and (cand.get("overall_pass") is False)
         is_hard_gate_fail = (cand.get("hard_gate_pass") is False)
         is_quarantined = (base.get("status") == "QUARANTINED_SIM_FAULT" or cand.get("status") == "QUARANTINED_SIM_FAULT")
+        has_anti_cheat_flag = base.get("has_anti_cheat_flag", False) or cand.get("has_anti_cheat_flag", False)
 
         if filter_mode == "regressions" and not is_regression:
             continue
         if filter_mode == "hard_gate_fails" and not is_hard_gate_fail:
+            continue
+        if filter_mode == "anti_cheat_flags" and not has_anti_cheat_flag:
             continue
         if filter_mode == "quarantined" and not is_quarantined:
             continue
@@ -410,6 +432,7 @@ async def list_run_scenarios(
         item["is_regression"] = is_regression
         item["is_hard_gate_fail"] = is_hard_gate_fail
         item["is_quarantined"] = is_quarantined
+        item["has_anti_cheat_flag"] = has_anti_cheat_flag
         results.append(item)
 
     return results

@@ -3,8 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+
 import asyncpg
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.app.api.deps import get_db_connection, get_tenant_id

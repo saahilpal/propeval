@@ -5,7 +5,6 @@ from httpx import ASGITransport, AsyncClient
 
 from backend.app.evaluation.rubric_judge import (
     _format_transcript_with_nonce,
-    evaluate_pairwise_with_position_swap,
     evaluate_single_rubric,
     sanitize_untrusted_transcript,
 )

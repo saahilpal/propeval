@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 from backend.app.security.pii_redactor import (
     _VERHOEFF_D,
     _VERHOEFF_P,

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, HTTPException
 import asyncpg
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
-from backend.app.api.deps import get_db_connection, get_tenant_id
+from backend.app.api.deps import get_db_connection
 from backend.app.config import settings
 
 router = APIRouter(prefix="/tenants", tags=["tenants"])

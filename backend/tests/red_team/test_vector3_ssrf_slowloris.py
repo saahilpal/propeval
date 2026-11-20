@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import pytest
 import httpx
+import pytest
 
 from backend.app.providers.webhook_adapter import (
-    MAX_RESPONSE_BYTES,
     RemoteWebhookAgentAdapter,
     SSRFSecurityError,
     is_safe_webhook_url,
