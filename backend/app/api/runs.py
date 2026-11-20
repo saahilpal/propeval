@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 from typing import Any
 from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import asyncpg
 from pydantic import BaseModel, Field
 
@@ -46,119 +47,173 @@ class RunResponse(BaseModel):
 @router.post("", response_model=RunResponse)
 async def create_eval_run(
     body: CreateRunRequest,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     tenant_id: str = Depends(get_tenant_id),
     conn: asyncpg.Connection = Depends(get_db_connection),
 ):
-    # 1. Fetch scenario suite scenarios
-    suite_row = await conn.fetchrow(
-        """
-        SELECT scenarios_json, scenario_count FROM scenario_suites
-        WHERE tenant_id = $1::uuid AND id = $2::uuid
-        """,
-        tenant_id,
-        str(body.suite_id),
-    )
-    if not suite_row:
-        raise HTTPException(status_code=404, detail="Scenario suite not found")
-
-    scenarios = json.loads(suite_row["scenarios_json"]) if isinstance(suite_row["scenarios_json"], str) else suite_row["scenarios_json"]
-
-    # 2. Insert eval_run
-    run_id = uuid4()
-    grader_sha = "0000000000000000000000000000000000000000000000000000000000000000"
-    
-    await conn.execute(
-        """
-        INSERT INTO eval_runs (
-            id, tenant_id, baseline_prompt_id, candidate_prompt_id,
-            suite_id, fixture_id, grader_prompt_sha256, trials_k,
-            random_seed, simulator_model_id, judge_model_id, status,
-            max_budget_usd, spent_usd
-        ) VALUES (
-            $1::uuid, $2::uuid, $3::uuid, $4::uuid,
-            $5::uuid, $6::uuid, $7, $8,
-            $9, $10, $11, 'QUEUED',
-            $12, 0.0
+    # 0. Check HTTP IETF Idempotency-Key
+    req_sha256 = hashlib.sha256(body.model_dump_json().encode()).hexdigest()
+    lock_id: int | None = None
+    if idempotency_key:
+        # Serialise concurrent bursts on the same (tenant_id, idempotency_key) pair
+        # Signed 64-bit int for PostgreSQL advisory locks
+        lock_id = int(hashlib.md5(f"{tenant_id}:{idempotency_key}".encode()).hexdigest()[:15], 16)
+        await conn.execute("SELECT pg_advisory_lock($1)", lock_id)
+        cached = await conn.fetchrow(
+            """
+            SELECT request_sha256, response_status, response_body
+            FROM http_idempotency_keys
+            WHERE tenant_id = $1::uuid AND idempotency_key = $2
+            """,
+            tenant_id,
+            idempotency_key,
         )
-        """,
-        run_id,
-        tenant_id,
-        str(body.baseline_prompt_id),
-        str(body.candidate_prompt_id),
-        str(body.suite_id),
-        str(body.fixture_id),
-        grader_sha,
-        body.trials_k,
-        body.random_seed,
-        body.simulator_model_id,
-        body.judge_model_id,
-        body.max_budget_usd,
-    )
-
-    # 3. Fan-out eval_jobs for baseline & candidate across all trials & scenarios
-    cost_per_job = body.max_budget_usd / max(len(scenarios) * body.trials_k * 2, 1)
-
-    for trial_idx in range(body.trials_k):
-        for scen in scenarios:
-            scen_id = scen.get("id", str(uuid4()))
-            for role, p_id in [("baseline", body.baseline_prompt_id), ("candidate", body.candidate_prompt_id)]:
-                job_id = uuid4()
-                # Create budget reservation
-                await create_budget_reservation(
-                    conn,
-                    tenant_id=tenant_id,
-                    run_id=run_id,
-                    job_id=job_id,
-                    fence_token=0,
-                    est_cost_usd=cost_per_job,
+        if cached:
+            await conn.execute("SELECT pg_advisory_unlock($1)", lock_id)
+            if cached["request_sha256"] != req_sha256:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Idempotency conflict: Idempotency-Key already used with different request payload",
                 )
-                # Insert eval_job
-                await conn.execute(
-                    """
-                    INSERT INTO eval_jobs (
-                        id, tenant_id, run_id, scenario_id, prompt_role,
-                        prompt_version_id, trial_index, priority, status
-                    ) VALUES (
-                        $1::uuid, $2::uuid, $3::uuid, $4, $5,
-                        $6::uuid, $7, 10, 'QUEUED'
+            payload = json.loads(cached["response_body"]) if isinstance(cached["response_body"], str) else cached["response_body"]
+            return RunResponse(**payload)
+
+    try:
+        # 1. Fetch scenario suite scenarios
+        suite_row = await conn.fetchrow(
+            """
+            SELECT scenarios_json, scenario_count FROM scenario_suites
+            WHERE tenant_id = $1::uuid AND id = $2::uuid
+            """,
+            tenant_id,
+            str(body.suite_id),
+        )
+        if not suite_row:
+            raise HTTPException(status_code=404, detail="Scenario suite not found")
+
+        scenarios = json.loads(suite_row["scenarios_json"]) if isinstance(suite_row["scenarios_json"], str) else suite_row["scenarios_json"]
+
+        # 2. Insert eval_run
+        run_id = uuid4()
+        grader_sha = "0000000000000000000000000000000000000000000000000000000000000000"
+        
+        await conn.execute(
+            """
+            INSERT INTO eval_runs (
+                id, tenant_id, baseline_prompt_id, candidate_prompt_id,
+                suite_id, fixture_id, grader_prompt_sha256, trials_k,
+                random_seed, simulator_model_id, judge_model_id, status,
+                max_budget_usd, spent_usd
+            ) VALUES (
+                $1::uuid, $2::uuid, $3::uuid, $4::uuid,
+                $5::uuid, $6::uuid, $7, $8,
+                $9, $10, $11, 'QUEUED',
+                $12, 0.0
+            )
+            """,
+            run_id,
+            tenant_id,
+            str(body.baseline_prompt_id),
+            str(body.candidate_prompt_id),
+            str(body.suite_id),
+            str(body.fixture_id),
+            grader_sha,
+            body.trials_k,
+            body.random_seed,
+            body.simulator_model_id,
+            body.judge_model_id,
+            body.max_budget_usd,
+        )
+
+        # 3. Fan-out eval_jobs for baseline & candidate across all trials & scenarios
+        cost_per_job = body.max_budget_usd / max(len(scenarios) * body.trials_k * 2, 1)
+
+        for trial_idx in range(body.trials_k):
+            for scen in scenarios:
+                scen_id = scen.get("id", str(uuid4()))
+                for role, p_id in [("baseline", body.baseline_prompt_id), ("candidate", body.candidate_prompt_id)]:
+                    job_id = uuid4()
+                    # Create budget reservation
+                    await create_budget_reservation(
+                        conn,
+                        tenant_id=tenant_id,
+                        run_id=run_id,
+                        job_id=job_id,
+                        fence_token=0,
+                        est_cost_usd=cost_per_job,
                     )
-                    """,
-                    job_id,
-                    tenant_id,
-                    run_id,
-                    scen_id,
-                    role,
-                    str(p_id),
-                    trial_idx,
+                    # Insert eval_job
+                    await conn.execute(
+                        """
+                        INSERT INTO eval_jobs (
+                            id, tenant_id, run_id, scenario_id, prompt_role,
+                            prompt_version_id, trial_index, priority, status
+                        ) VALUES (
+                            $1::uuid, $2::uuid, $3::uuid, $4, $5,
+                            $6::uuid, $7, 10, 'QUEUED'
+                        )
+                        """,
+                        job_id,
+                        tenant_id,
+                        run_id,
+                        scen_id,
+                        role,
+                        str(p_id),
+                        trial_idx,
+                    )
+
+        row = await conn.fetchrow(
+            """
+            SELECT id, status, baseline_prompt_id, candidate_prompt_id,
+                   suite_id, fixture_id, trials_k, spent_usd, max_budget_usd,
+                   summary_stats, created_at, completed_at
+            FROM eval_runs
+            WHERE id = $1::uuid
+            """,
+            run_id,
+        )
+        if not row:
+            raise HTTPException(status_code=500, detail="Failed to create evaluation run")
+
+        run_resp = RunResponse(
+            id=str(row["id"]),
+            status=row["status"],
+            baseline_prompt_id=str(row["baseline_prompt_id"]),
+            candidate_prompt_id=str(row["candidate_prompt_id"]),
+            suite_id=str(row["suite_id"]),
+            fixture_id=str(row["fixture_id"]),
+            trials_k=row["trials_k"],
+            spent_usd=float(row["spent_usd"]),
+            max_budget_usd=float(row["max_budget_usd"]),
+            summary_stats=json.loads(row["summary_stats"]) if row["summary_stats"] else None,
+            created_at=row["created_at"].isoformat(),
+            completed_at=row["completed_at"].isoformat() if row["completed_at"] else None,
+        )
+
+        if idempotency_key:
+            await conn.execute(
+                """
+                INSERT INTO http_idempotency_keys (
+                    tenant_id, idempotency_key, request_sha256, response_status, response_body
+                ) VALUES (
+                    $1::uuid, $2, $3, $4, $5::jsonb
                 )
+                ON CONFLICT (tenant_id, idempotency_key) DO NOTHING
+                """,
+                tenant_id,
+                idempotency_key,
+                req_sha256,
+                200,
+                json.dumps(run_resp.model_dump(mode="json")),
+            )
 
-    row = await conn.fetchrow(
-        """
-        SELECT id, status, baseline_prompt_id, candidate_prompt_id,
-               suite_id, fixture_id, trials_k, spent_usd, max_budget_usd,
-               summary_stats, created_at, completed_at
-        FROM eval_runs
-        WHERE id = $1::uuid
-        """,
-        run_id,
-    )
-    if not row:
-        raise HTTPException(status_code=500, detail="Failed to create evaluation run")
-
-    return RunResponse(
-        id=str(row["id"]),
-        status=row["status"],
-        baseline_prompt_id=str(row["baseline_prompt_id"]),
-        candidate_prompt_id=str(row["candidate_prompt_id"]),
-        suite_id=str(row["suite_id"]),
-        fixture_id=str(row["fixture_id"]),
-        trials_k=row["trials_k"],
-        spent_usd=float(row["spent_usd"]),
-        max_budget_usd=float(row["max_budget_usd"]),
-        summary_stats=json.loads(row["summary_stats"]) if row["summary_stats"] else None,
-        created_at=row["created_at"].isoformat(),
-        completed_at=row["completed_at"].isoformat() if row["completed_at"] else None,
-    )
+        return run_resp
+    finally:
+        if lock_id is not None:
+            try:
+                await conn.execute("SELECT pg_advisory_unlock($1)", lock_id)
+            except Exception:
+                pass
 
 
 @router.get("", response_model=list[RunResponse])
@@ -464,37 +519,66 @@ async def stream_run_events(
     pool = await get_pool()
 
     async def event_generator():
-        curr_event_id = int(last_event_id) if last_event_id and last_event_id.isdigit() else 0
+        try:
+            curr_event_id = int(last_event_id) if last_event_id and last_event_id.strip().isdigit() else 0
+        except (ValueError, TypeError):
+            curr_event_id = 0
+        if curr_event_id < 0:
+            curr_event_id = 0
 
         while True:
             if await request.is_disconnected():
                 break
 
             async with pool.acquire() as conn:
-                await conn.execute("SELECT set_config('app.current_tenant_id', $1::text, true)", tenant_id)
-                events = await conn.fetch(
-                    """
-                    SELECT event_id, event_type, payload
-                    FROM run_events
-                    WHERE tenant_id = $1::uuid AND run_id = $2::uuid AND event_id > $3
-                    ORDER BY event_id ASC
-                    LIMIT 50
-                    """,
-                    tenant_id,
-                    run_id,
-                    curr_event_id,
-                )
+                await conn.execute("SELECT set_config('app.current_tenant_id', $1::text, false)", tenant_id)
+                try:
+                    events = await conn.fetch(
+                        """
+                        SELECT event_id, event_type, payload
+                        FROM run_events
+                        WHERE tenant_id = $1::uuid AND run_id = $2::uuid AND event_id > $3
+                        ORDER BY event_id ASC
+                        LIMIT 50
+                        """,
+                        tenant_id,
+                        run_id,
+                        curr_event_id,
+                    )
 
-                for ev in events:
-                    curr_event_id = ev["event_id"]
-                    ev_type = ev["event_type"]
-                    payload = ev["payload"]
-                    data_str = json.dumps(payload) if not isinstance(payload, str) else payload
+                    for ev in events:
+                        curr_event_id = ev["event_id"]
+                        ev_type = ev["event_type"]
+                        payload = ev["payload"]
+                        data_str = json.dumps(payload) if not isinstance(payload, str) else payload
 
-                    yield f"id: {curr_event_id}\nevent: {ev_type}\ndata: {data_str}\n\n"
+                        yield f"id: {curr_event_id}\nevent: {ev_type}\ndata: {data_str}\n\n"
 
-                    if ev_type == "run.completed":
-                        return
+                        if ev_type in ("run.completed", "run.budget_halted", "run.early_aborted"):
+                            return
+
+                    # Terminal check when no new events are available
+                    if not events:
+                        run_status = await conn.fetchval(
+                            """
+                            SELECT status FROM eval_runs
+                            WHERE tenant_id = $1::uuid AND id = $2::uuid
+                            """,
+                            tenant_id,
+                            run_id,
+                        )
+                        if run_status in (
+                            "PASSED",
+                            "REGRESSED",
+                            "INCONCLUSIVE_UNDERPOWERED",
+                            "BUDGET_EXCEEDED",
+                            "EARLY_ABORTED_HARM",
+                            "FAILED",
+                        ):
+                            yield f"event: run.completed\ndata: {{\"status\": \"{run_status}\", \"run_id\": \"{run_id}\"}}\n\n"
+                            return
+                finally:
+                    await conn.execute("SELECT set_config('app.current_tenant_id', '', false)")
 
             await asyncio.sleep(0.5)
 

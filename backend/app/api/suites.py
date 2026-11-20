@@ -8,6 +8,8 @@ import asyncpg
 from pydantic import BaseModel, Field
 
 from backend.app.api.deps import get_db_connection, get_tenant_id
+from backend.app.evaluation.rubric_judge import sanitize_untrusted_transcript
+from backend.app.security.pii_redactor import redact_pii_dpdp
 
 router = APIRouter(prefix="/suites", tags=["suites"])
 
@@ -165,11 +167,15 @@ async def import_telephony_recordings(
 ):
     scenarios = []
     for idx, rec in enumerate(body.recordings):
+        raw_text = rec.get("raw_transcript", "")
+        # Sanitize against prompt injection special tokens & redact DPDP PII before saving
+        sanitized = sanitize_untrusted_transcript(raw_text)
+        redacted = redact_pii_dpdp(sanitized)
         scenarios.append({
             "id": f"rec_{idx+1}",
             "intent": "telephony_replay",
             "language": rec.get("detected_language", "hinglish"),
-            "raw_text": rec.get("raw_transcript", ""),
+            "raw_text": redacted,
             "metadata": rec.get("metadata", {}),
         })
 

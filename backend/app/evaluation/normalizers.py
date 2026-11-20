@@ -9,6 +9,10 @@ from __future__ import annotations
 
 import re
 
+DEVANAGARI_DIGITS = "०१२३४५६७८९"
+ASCII_DIGITS = "0123456789"
+DEV_TO_ASCII = str.maketrans(DEVANAGARI_DIGITS, ASCII_DIGITS)
+
 HINDI_NUMBERS: dict[str, float] = {
     "zero": 0.0,
     "ek": 1.0,
@@ -46,6 +50,24 @@ HINDI_NUMBERS: dict[str, float] = {
     "nabbe": 90.0,
     "sau": 100.0,
     "so": 100.0,
+    # Devanagari Hindi number words
+    "एक": 1.0,
+    "दो": 2.0,
+    "तीन": 3.0,
+    "चार": 4.0,
+    "पांच": 5.0,
+    "पाँच": 5.0,
+    "छह": 6.0,
+    "सात": 7.0,
+    "आठ": 8.0,
+    "नौ": 9.0,
+    "दस": 10.0,
+    "बीस": 20.0,
+    "पच्चीस": 25.0,
+    "तीस": 30.0,
+    "चालीस": 40.0,
+    "पचास": 50.0,
+    "सौ": 100.0,
 }
 
 COLLOQUIAL_MULTIPLIERS: dict[str, float] = {
@@ -56,6 +78,14 @@ COLLOQUIAL_MULTIPLIERS: dict[str, float] = {
     "paune teen": 2.75,
     "paune char": 3.75,
     "paune": 0.75,
+    # Devanagari colloquial multipliers
+    "सवा": 1.25,
+    "डेढ़": 1.5,
+    "ढाई": 2.5,
+    "पौने दो": 1.75,
+    "पौने तीन": 2.75,
+    "पौने चार": 3.75,
+    "पौने": 0.75,
 }
 
 DENOMINATIONS: dict[str, float] = {
@@ -73,13 +103,22 @@ DENOMINATIONS: dict[str, float] = {
     "thousand": 1_000.0,
     "hazaar": 1_000.0,
     "hazar": 1_000.0,
+    # Devanagari denominations
+    "करोड़": 10_000_000.0,
+    "करोड": 10_000_000.0,
+    "लाख": 100_000.0,
+    "हज़ार": 1_000.0,
+    "हजार": 1_000.0,
+    "पेटी": 100_000.0,
+    "खोका": 10_000_000.0,
 }
 
 
 def _clean_text(text: str) -> str:
     cleaned = text.lower().strip()
     cleaned = cleaned.replace(",", "")
-    cleaned = re.sub(r"[₹]|rs\.?|inr", " ", cleaned)
+    cleaned = cleaned.translate(DEV_TO_ASCII)
+    cleaned = re.sub(r"[₹]|rs\.?|inr|रुपये|रुपया", " ", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
     return cleaned
 
@@ -116,9 +155,11 @@ def parse_indian_currency(text: str | float) -> int | None:
     total_inr: float = 0.0
     matched = False
 
+    denom_union = "|".join(re.escape(k) for k in sorted(DENOMINATIONS.keys(), key=lambda x: -len(x)))
+
     # Check for Hinglish colloquial prefixes like 'dedh crore', 'dhai crore', 'sawa crore'
     for col_key, multiplier in sorted(COLLOQUIAL_MULTIPLIERS.items(), key=lambda x: -len(x[0])):
-        pattern = rf"\b{col_key}\s+(crore|cr|lakh|lac|peti|khoka)\b"
+        pattern = rf"(?:^|\s){re.escape(col_key)}\s+({denom_union})(?:(?!\w)|$)"
         match = re.search(pattern, raw)
         if match:
             denom_key = match.group(1)
@@ -128,7 +169,7 @@ def parse_indian_currency(text: str | float) -> int | None:
             matched = True
 
     # Check for spoken decimals like 'ek point do crore' -> 1.2 crore
-    point_match = re.search(r"\b([a-z]+)\s+point\s+([a-z]+|\d+)\s+(crore|cr|lakh|lac)\b", raw)
+    point_match = re.search(rf"\b([a-z]+)\s+point\s+([a-z]+|\d+)\s+({denom_union})(?:(?!\w)|$)", raw)
     if point_match:
         w1, w2, denom = point_match.groups()
         n1 = HINDI_NUMBERS.get(w1, 1.0)
@@ -140,7 +181,7 @@ def parse_indian_currency(text: str | float) -> int | None:
 
     # Check for Hinglish spoken digits with denominations (e.g. 'ek crore', 'bees lakh')
     for word_num, num_val in sorted(HINDI_NUMBERS.items(), key=lambda x: -len(x[0])):
-        pattern = rf"\b{word_num}\s+(crore|cr|lakh|lac|hazaar|hazar|peti|khoka)\b"
+        pattern = rf"(?:^|\s){re.escape(word_num)}\s+({denom_union})(?:(?!\w)|$)"
         match = re.search(pattern, raw)
         if match:
             denom_key = match.group(1)
@@ -149,9 +190,9 @@ def parse_indian_currency(text: str | float) -> int | None:
             raw = raw.replace(match.group(0), " ").strip()
             matched = True
 
-    # Check for standard numeric patterns like '1.2 cr', '120 lakh', '50k'
+    # Check for standard numeric patterns like '1.2 cr', '120 lakh', '50k', '1.5 करोड़'
     num_pattern = re.compile(
-        r"(\d+(?:\.\d+)?)\s*(cr|crore|crores|koti|khoka|lakh|lac|lakhs|lacs|peti|k|thousand|hazaar|hazar)\b"
+        rf"(\d+(?:\.\d+)?)\s*({denom_union})(?:(?!\w)|$)"
     )
     for match in num_pattern.finditer(raw):
         val_str, unit = match.groups()
@@ -189,11 +230,11 @@ def are_currencies_equivalent(
 
 def parse_bhk(text: str) -> float | None:
     """Parse BHK expressions into float numbers of bedrooms."""
-    cleaned = text.lower().strip()
-    if "studio" in cleaned or "rk" in cleaned:
+    cleaned = text.lower().strip().translate(DEV_TO_ASCII)
+    if "studio" in cleaned or "rk" in cleaned or "स्टूडियो" in cleaned:
         return 0.5
 
-    match = re.search(r"(\d+(?:\.5)?)\s*bhk", cleaned)
+    match = re.search(r"(\d+(?:\.5)?)\s*(?:bhk|बीएचके|बी\s*एच\s*के|बेडरूम|कमरा)", cleaned)
     if match:
         return float(match.group(1))
 
@@ -202,12 +243,12 @@ def parse_bhk(text: str) -> float | None:
 
 def parse_area_sqft(text: str) -> float | None:
     """Parse real estate area expressions into normalized Square Feet (sq ft)."""
-    cleaned = text.lower().strip().replace(",", "")
-    m_sqm = re.search(r"(\d+(?:\.\d+)?)\s*(?:sq\s*m|sqm|sqmt|square\s*meters?)", cleaned)
+    cleaned = text.lower().strip().replace(",", "").translate(DEV_TO_ASCII)
+    m_sqm = re.search(r"(\d+(?:\.\d+)?)\s*(?:sq\s*m|sqm|sqmt|square\s*meters?|वर्ग\s*मीटर)", cleaned)
     if m_sqm:
         return float(m_sqm.group(1)) * 10.7639
 
-    m_sqft = re.search(r"(\d+(?:\.\d+)?)\s*(?:sq\s*ft|sqft|square\s*feet|sft)", cleaned)
+    m_sqft = re.search(r"(\d+(?:\.\d+)?)\s*(?:sq\s*ft|sqft|square\s*feet|sft|वर्ग\s*फुट|वर्गफुट)", cleaned)
     if m_sqft:
         return float(m_sqft.group(1))
 

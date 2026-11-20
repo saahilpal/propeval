@@ -76,9 +76,30 @@ def verify_cross_family(target_model_id: str, judge_model_id: str) -> None:
         )
 
 
+def sanitize_untrusted_transcript(transcript: str) -> str:
+    """Sanitize untrusted conversation text against prompt injection.
+
+    1. Escapes any transcript XML tags to prevent early delimiter breakout.
+    2. Strips common LLM special control tokens (ChatML, LLaMA, Mistral, Anthropic).
+    """
+    if not transcript:
+        return ""
+    # Strip LLM control tokens
+    cleaned = re.sub(
+        r"(<\|im_start\|>|<\|im_end\|>|<\|system\|>|<\|user\|>|<\|assistant\|>|<\|endoftext\|>|\[INST\]|\[/INST\]|<<SYS>>|<</SYS>>)",
+        "",
+        transcript,
+        flags=re.IGNORECASE,
+    )
+    # Neutralize any XML tags matching transcript delimiters
+    cleaned = re.sub(r"<\s*/?\s*transcript[_\w\-]*\s*>", "[ESCAPED_TRANSCRIPT_TAG]", cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
 def _format_transcript_with_nonce(transcript: str, nonce: str) -> str:
     """Wrap transcript in randomized XML nonces to isolate against indirect prompt injection."""
-    return f"<transcript_{nonce}>\n{transcript}\n</transcript_{nonce}>"
+    sanitized = sanitize_untrusted_transcript(transcript)
+    return f"<transcript_{nonce}>\n{sanitized}\n</transcript_{nonce}>"
 
 
 def parse_judgment_response(response_text: str) -> dict[str, Any]:

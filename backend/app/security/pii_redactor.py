@@ -2,6 +2,11 @@ from __future__ import annotations
 
 import re
 
+# Devanagari to ASCII digit translation
+DEVANAGARI_DIGITS = "०१२३४५६७८९"
+ASCII_DIGITS = "0123456789"
+DEV_TO_ASCII = str.maketrans(DEVANAGARI_DIGITS, ASCII_DIGITS)
+
 # Verhoeff algorithm multiplication and permutation tables for Aadhaar validation
 _VERHOEFF_D = [
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -29,8 +34,12 @@ _VERHOEFF_P = [
 
 
 def validate_verhoeff_aadhaar(number_str: str) -> bool:
-    """Validate 12-digit Aadhaar checksum using Verhoeff algorithm."""
-    digits = re.sub(r"\D", "", number_str)
+    """Validate 12-digit Aadhaar checksum using Verhoeff algorithm.
+
+    Translates Devanagari numerals to ASCII digits if present.
+    """
+    ascii_str = number_str.translate(DEV_TO_ASCII)
+    digits = re.sub(r"\D", "", ascii_str)
     if len(digits) != 12:
         return False
     # Aadhaar first digit cannot be 0 or 1
@@ -44,24 +53,44 @@ def validate_verhoeff_aadhaar(number_str: str) -> bool:
     return c == 0
 
 
-# PAN Card Regex: 5 letters (4th is status e.g. P/C/F), 4 digits, 1 letter
+# PAN Card Regex: 5 letters, 4 digits, 1 letter
 PAN_REGEX = re.compile(r"\b([A-Z]{5}[0-9]{4}[A-Z]{1})\b", re.IGNORECASE)
 
-# Indian Phone Regex: optional +91, 0, or space/dash with 10 digits starting with 6-9
+# Indian Mobile Regex: optional (+91, 91, 0, +९१, ९१, ०) followed by 10 digits starting with 6-9 or ६-९
+ALL_6_9 = r"[6-9६-९]"
+ALL_DIGITS = r"[\d०-९]"
 PHONE_REGEX = re.compile(
-    r"(?:(?:\+91|91|0)[\s\-]?)?([6-9]\d{4}[\s\-]?\d{5})\b"
+    rf"(?:(?:\+?91|91|0|\+?९१|९१|०)[\s\-]?)?({ALL_6_9}(?:[\s\-]*{ALL_DIGITS}){{9}})\b"
 )
 
-# Potential 12-digit Aadhaar patterns (e.g., "1234 5678 9012" or "1234-5678-9012" or "123456789012")
-AADHAAR_CANDIDATE_REGEX = re.compile(r"\b(\d{4}[\s\-]?\d{4}[\s\-]?\d{4})\b")
+# Potential 12-digit Aadhaar patterns (ASCII or Devanagari)
+AADHAAR_CANDIDATE_REGEX = re.compile(
+    rf"\b({ALL_DIGITS}{{4}}[\s\-]?{ALL_DIGITS}{{4}}[\s\-]?{ALL_DIGITS}{{4}})\b"
+)
 
 
-def redact_pii_dpdp(text: str) -> str:
-    """Scrub Indian PII (Phone, PAN, Verhoeff-valid Aadhaar) while preserving RERA IDs and property figures."""
+def redact_pii_dpdp(
+    text: str,
+    allowlist: list[str] | set[str] | None = None,
+) -> str:
+    """Scrub Indian PII (Phone, PAN, Verhoeff-valid Aadhaar) while preserving RERA IDs and property figures.
+
+    Parameters:
+        text: Untrusted transcript or string.
+        allowlist: Optional set of strings (e.g. project names, RERA IDs) that should never be redacted.
+    """
     if not text:
         return text
 
+    # Protect allowlisted terms with placeholders
+    placeholders: dict[str, str] = {}
     result = text
+    if allowlist:
+        for idx, term in enumerate(sorted(allowlist, key=lambda s: -len(s))):
+            if term and term in result:
+                token = f"__ALLOWLIST_TOKEN_{idx}__"
+                placeholders[token] = term
+                result = result.replace(term, token)
 
     # 1. Redact PAN Cards
     result = PAN_REGEX.sub("[REDACTED_PAN]", result)
@@ -78,12 +107,16 @@ def redact_pii_dpdp(text: str) -> str:
     # 3. Redact Indian Mobile Numbers
     def _phone_sub(match: re.Match) -> str:
         matched_str = match.group(0)
-        # Avoid redacting prices like "9000000000" if context is currency
-        digits = re.sub(r"\D", "", match.group(1))
+        digits_raw = match.group(1).translate(DEV_TO_ASCII)
+        digits = re.sub(r"\D", "", digits_raw)
         if len(digits) == 10 and digits[0] in "6789":
             return "[REDACTED_PHONE]"
         return matched_str
 
     result = PHONE_REGEX.sub(_phone_sub, result)
+
+    # Restore allowlisted terms
+    for token, original in placeholders.items():
+        result = result.replace(token, original)
 
     return result
