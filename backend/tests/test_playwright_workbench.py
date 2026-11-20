@@ -35,6 +35,7 @@ async def test_playwright_visual_proof_loop():
         {"name": "1440x900", "width": 1440, "height": 900},
         {"name": "1024x768", "width": 1024, "height": 768},
         {"name": "768x1024", "width": 768, "height": 1024},
+        {"name": "390x844", "width": 390, "height": 844},
     ]
 
     async with async_playwright() as p:
@@ -50,6 +51,8 @@ async def test_playwright_visual_proof_loop():
             await page_wb.wait_for_selector("text=Laya System-1 Cascade")
             await page_wb.wait_for_selector("text=92.06%")
             await page_wb.screenshot(path=f"web/screenshots/workbench_{vp['name']}.png", full_page=True)
+            if vp["name"] == "1440x900":
+                await page_wb.screenshot(path="web/screenshots/hero_diff.png", full_page=True)
             await page_wb.close()
 
             # 2. Registry Page
@@ -71,13 +74,21 @@ async def test_playwright_visual_proof_loop():
             await page_scen.wait_for_selector("text=RESOLVED (S1)")
             await page_scen.wait_for_selector("text=ESCALATED (S2)")
             await page_scen.screenshot(path=f"web/screenshots/scenario_inspector_{vp['name']}.png", full_page=True)
+            if vp["name"] == "1440x900":
+                await page_scen.screenshot(path="web/screenshots/turn_inspector.png", full_page=True)
             await page_scen.close()
 
         await browser.close()
 
     assert len(all_errors) == 0, f"Found browser console/hydration errors: {all_errors}"
 
-    # Verify screenshots exist and are non-empty
+    # Verify canonical desktop hero artifacts exist
+    assert os.path.exists("web/screenshots/hero_diff.png"), "Missing hero_diff.png"
+    assert os.path.getsize("web/screenshots/hero_diff.png") > 10000, "hero_diff.png is too small"
+    assert os.path.exists("web/screenshots/turn_inspector.png"), "Missing turn_inspector.png"
+    assert os.path.getsize("web/screenshots/turn_inspector.png") > 10000, "turn_inspector.png is too small"
+
+    # Verify screenshots exist and are non-empty for all viewports
     for vp in viewports:
         for prefix in ["workbench", "registry", "scenario_inspector"]:
             shot = f"web/screenshots/{prefix}_{vp['name']}.png"

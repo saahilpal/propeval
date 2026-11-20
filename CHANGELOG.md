@@ -5,6 +5,21 @@ All notable changes to PropEval will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.4.1] - 2026-11-20
+
+### Added - Final Responsive Polish & High-Impact Pitch Delivery
+- **Responsive Multi-Viewport Sweep (`web/`):**
+  - Added mobile container padding, header responsiveness, and overflow containment on `390×844` mobile viewport.
+  - Verified across 4 viewports (`1440×900`, `1024×768`, `768×1024`, `390×844`) with 0 console errors and 0 hydration warnings.
+  - Saved canonical desktop screenshot artifacts: `web/screenshots/hero_diff.png` and `web/screenshots/turn_inspector.png`.
+- **Founder & Engineer Pitch Rewrite (`README.md`):**
+  - Rewrote documentation as a high-impact, zero-buzzword founder pitch highlighting the real-estate voice AI regression problem.
+  - Embedded canonical hero screenshots, Draw.io architecture diagrams, honest ID/OOD benchmark matrix, and 1-command quickstart.
+- **Playwright Test Suite Extension (`backend/tests/test_playwright_workbench.py`):**
+  - Expanded test assertions to validate mobile `390x844` viewport alongside desktop and tablet.
+- **90-Second Loom Video Script (`~/Desktop/propeval-interview-kit/08_LOOM_DEMO_SCRIPT_90SEC.md`):**
+  - Authored a punchy, conversational 90-second Loom script with exact on-screen click cues and timestamp breakdown.
+
 ## [v0.4.0] - 2026-11-20
 
 ### Added - Huvo AI Technical Investigation & Production Hardening

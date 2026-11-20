@@ -228,7 +228,7 @@ export default function WorkbenchPage() {
   const failureStages = diffData?.failure_stage_breakdown || {};
 
   return (
-    <div className="flex-1 flex flex-col p-6 max-w-7xl mx-auto w-full gap-6 text-ink-primary">
+    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-6 text-ink-primary">
       {/* Inline Error Toast with Retry */}
       {errorToast && (
         <div className="flex items-center justify-between bg-accent-crimsonBg border border-accent-crimson/30 rounded-md px-4 py-3 text-xs text-accent-crimson">
@@ -790,7 +790,7 @@ export default function WorkbenchPage() {
           </div>
 
           {/* Filter Chips with Smooth Sliding Highlight */}
-          <div className="flex items-center gap-1 bg-canvas p-1 rounded-md border border-border text-xs font-mono">
+          <div className="flex items-center gap-1 bg-canvas p-1 rounded-md border border-border text-xs font-mono overflow-x-auto max-w-full">
             {[
               { id: "all", label: "All Scenarios" },
               { id: "regressions", label: "Regressions Only" },

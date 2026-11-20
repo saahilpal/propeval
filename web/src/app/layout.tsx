@@ -14,11 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-canvas text-ink-primary flex flex-col antialiased">
+      <body className="min-h-screen bg-canvas text-ink-primary flex flex-col antialiased overflow-x-hidden">
         {/* Anti-Slop Top Navigation */}
-        <header className="h-12 border-b border-border bg-surface px-6 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 group">
+        <header className="h-12 border-b border-border bg-surface px-4 sm:px-6 flex items-center justify-between sticky top-0 z-50">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Link href="/" className="flex items-center gap-2 group shrink-0">
               <span className="font-mono font-bold text-sm tracking-wider uppercase text-ink-primary">
                 PropEval
               </span>
@@ -27,23 +27,23 @@ export default function RootLayout({
               </span>
             </Link>
 
-            <nav className="flex items-center gap-4 text-xs font-medium text-ink-secondary">
+            <nav className="flex items-center gap-2 sm:gap-4 text-xs font-medium text-ink-secondary">
               <Link
                 href="/"
-                className="hover:text-ink-primary transition-colors py-1 px-2 rounded hover:bg-gray-50"
+                className="hover:text-ink-primary transition-colors py-1 px-1.5 sm:px-2 rounded hover:bg-gray-50"
               >
                 Workbench
               </Link>
               <Link
                 href="/registry"
-                className="hover:text-ink-primary transition-colors py-1 px-2 rounded hover:bg-gray-50"
+                className="hover:text-ink-primary transition-colors py-1 px-1.5 sm:px-2 rounded hover:bg-gray-50 whitespace-nowrap"
               >
-                Prompt & RERA Registry
+                Registry
               </Link>
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-4">
             <div className="flex items-center gap-2 text-xs font-mono text-ink-secondary">
               <span className="inline-block w-2 h-2 rounded-full bg-accent-emerald animate-pulse" />
               <span>Postgres 17 (port 5433)</span>
@@ -53,7 +53,7 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col">{children}</main>
+        <main className="flex-1 flex flex-col w-full max-w-full overflow-x-hidden">{children}</main>
       </body>
     </html>
   );

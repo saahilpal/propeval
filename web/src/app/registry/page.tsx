@@ -35,17 +35,17 @@ export default function RegistryPage() {
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col p-6 max-w-7xl mx-auto w-full gap-6">
-      <div className="flex items-center justify-between border-b border-border pb-4">
-        <div className="flex items-center gap-3">
+    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-6">
+      <div className="flex flex-wrap items-center justify-between border-b border-border pb-4 gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-xs font-mono text-ink-secondary hover:text-ink-primary px-2 py-1 rounded border border-border bg-surface"
+            className="flex items-center gap-1.5 text-xs font-mono text-ink-secondary hover:text-ink-primary px-2.5 py-1 rounded border border-border bg-surface shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Workbench</span>
           </Link>
-          <h1 className="text-sm font-mono font-bold text-ink-primary uppercase tracking-wide">
+          <h1 className="text-sm font-mono font-bold text-ink-primary uppercase tracking-wide truncate">
             Prompt &amp; RERA Project Registry
           </h1>
         </div>

@@ -119,20 +119,20 @@ export default function ScenarioInspectorPage() {
   const candidate = detail?.candidate;
 
   return (
-    <div className="flex-1 flex flex-col p-6 max-w-7xl mx-auto w-full gap-6 text-ink-primary">
+    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-6 text-ink-primary">
       {/* Top Breadcrumb & Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-xs font-mono text-ink-secondary hover:text-ink-primary px-3 py-1.5 rounded-md border border-border bg-surface transition-colors shadow-xs"
+            className="flex items-center gap-1.5 text-xs font-mono text-ink-secondary hover:text-ink-primary px-2.5 py-1.5 rounded-md border border-border bg-surface transition-colors shadow-xs shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Workbench</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <h1 className="text-sm font-mono font-bold text-ink-primary">{scenarioId}</h1>
-            <span className="text-[11px] font-mono text-ink-secondary px-2 py-0.5 rounded bg-gray-100 border border-border">
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-sm font-mono font-bold text-ink-primary truncate max-w-[180px] sm:max-w-none">{scenarioId}</h1>
+            <span className="text-[11px] font-mono text-ink-secondary px-2 py-0.5 rounded bg-gray-100 border border-border shrink-0">
               Trial 0
             </span>
           </div>
