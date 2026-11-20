@@ -2,3 +2,4 @@
 .synapse/
 .synapse/*-wal
 .synapse/*-shm
+.DS_Store
