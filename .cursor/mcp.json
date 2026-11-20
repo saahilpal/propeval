@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "synap": {
+      "command": "/Users/nitrousoxide/.local/bin/synap",
+      "args": ["mcp", "serve"],
+      "cwd": "/Users/nitrousoxide/Code/hugo"
+    }
+  }
+}
