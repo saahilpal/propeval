@@ -4,6 +4,7 @@
 [![PostgreSQL 17](https://img.shields.io/badge/postgresql-17-336791.svg)](https://www.postgresql.org/)
 [![Next.js 16](https://img.shields.io/badge/next.js-16.4-black.svg)](https://nextjs.org/)
 [![Tests: 146/146 Passed](https://img.shields.io/badge/tests-146%2F146%20passed-brightgreen.svg)](backend/tests/)
+[![Live Demo](https://img.shields.io/badge/live%20demo-Cloudflare%20Tunnel-blue?logo=cloudflare)](https://pierre-dated-holiday-maryland.trycloudflare.com)
 [![HF Model](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow.svg)](https://huggingface.co/sahilpal/propeval-laya-hinglish-realestate-v1)
 [![HF Dataset](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset-green.svg)](https://huggingface.co/datasets/sahilpal/propeval-hinglish-realestate-eval)
 [![Laya Cascade: 97.6% OOD](https://img.shields.io/badge/laya--cascade-97.62%25%20OOD%20at%200.38ms-blueviolet.svg)](benchmarks/BENCHMARK_REPORT.md)

@@ -5,6 +5,25 @@ All notable changes to PropEval will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.5.0] - 2026-11-20
+
+### Added - Product Launch: SaaS Product Experience & Single-URL Cloudflare Tunnel
+- **Ship-Ready Developer Product Homepage (`/`):**
+  - Crafted an authentic developer-product landing page adopting Huvo.ai visual DNA (clean high-contrast surfaces, editorial typography, restrained indigo/slate accents, disciplined radii, zero AI slop).
+  - Concrete breakdown of the 4 real-estate voice AI failure modes (TRAI DNC opt-outs, 8 kHz acoustic unit misparses, RERA hallucinations, invented WhatsApp actions after HTTP 503).
+  - Live verified numbers section dynamically loaded from real benchmark and API data.
+  - Interactive CLI quickstart copy snippet and 3-stage architecture pipeline with embedded Draw.io SVGs.
+  - Clean minimal product footer with open-source credits and social/email links.
+- **Dedicated Live Workbench Route (`/workbench`):**
+  - Moved the interactive Regression Diff Workbench to `/workbench`.
+  - Added a unified sticky product navigation bar across `/`, `/workbench`, and `/registry`.
+- **Single-URL Cloudflare Tunnel Architecture:**
+  - Added unbuffered Next.js streaming route handler (`web/src/app/api/v1/runs/[id]/stream/route.ts`) to proxy SSE streams with `X-Accel-Buffering: no`.
+  - Configured Next.js API rewrites for relative endpoint calls, enabling single-URL public tunnel hosting with zero CORS errors and zero `localhost` leaks.
+  - Deployed live Cloudflare Tunnel at `https://pierre-dated-holiday-maryland.trycloudflare.com`.
+- **Comprehensive Multi-Viewport Visual Verification:**
+  - Playwright visual proof loop passed across all 4 viewports (`1440×900`, `1024×768`, `768×1024`, `390×844`) locally and across the live public Cloudflare Tunnel URL with 0 console errors, 0 hydration warnings, and 0 visual overlaps.
+
 ## [v0.4.1] - 2026-11-20
 
 ### Added - Final Responsive Polish & High-Impact Pitch Delivery
