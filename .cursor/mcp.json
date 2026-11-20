@@ -4,6 +4,18 @@
       "command": "/Users/nitrousoxide/.local/bin/synap",
       "args": ["mcp", "serve"],
       "cwd": "/Users/nitrousoxide/Code/hugo"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://propeval_user:propeval_pass@localhost:5432/propeval"
+      ]
     }
   }
 }
