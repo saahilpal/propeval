@@ -1,0 +1,44 @@
+# AI Agent Scaffolding & Session Caches
+.agents/
+.claude/
+.cursor/
+AGENTS.md
+CLAUDE.md
+skills-lock.json
+AUDIT_AND_FIX_REPORT.md
+
+# Synapse Index & Internal Logs
+.synap/
+.synapse/
+.synapse/*-wal
+.synapse/*-shm
+*.log
+.service_logs/
+.service_pids/
+
+# Python & Testing Caches
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.venv/
+.env
+
+# Node & Next.js
+node_modules/
+web/node_modules/
+web/.next/
+web/.turbo/
+.next/
+dist/
+build/
+*.egg-info/
+web/screenshots/
+
+# System
+.DS_Store
+
+# Archival mandate: docs research package moved to Desktop
+docs/

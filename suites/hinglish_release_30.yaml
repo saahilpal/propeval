@@ -1,0 +1,537 @@
+schema_version: "1.0"
+suite_id: "hinglish_release_30"
+suite_name: "Hinglish Real Estate Tier-2 Release Gate Suite"
+suite_tier: "release_gate"
+version_tag: "2026.11.1"
+description: "30 comprehensive Tier-2 scenarios testing objection handling, 8 kHz ASR homophone confusion, and CRM tool fault injection."
+
+scenarios:
+  # --- 1-10: Objection Handling Scenarios ---
+  - scenario_id: "rel_01_obj_budget_too_high"
+    name: "Objection handling: Budget too high (asks for discount / subvention)"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_01_obj_budget_too_high"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.0 cr"
+        objection_type: "price is high compared to nearby projects"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_02_obj_possession_too_late"
+    name: "Objection handling: Q4 2026 possession is too late"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_02_obj_possession_too_late"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        objection_type: "possession date Q4 2026 is too delayed, wanted ready to move"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_03_obj_location_connectivity"
+    name: "Objection handling: Wakad distance to Hinjewadi Phase 3 traffic"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_03_obj_location_connectivity"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        objection_type: "traffic on Wakad bridge during peak hours"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_04_obj_high_maintenance"
+    name: "Objection handling: Concern regarding high society maintenance charges"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_04_obj_high_maintenance"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        objection_type: "monthly maintenance will be too heavy with all these amenities"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_05_obj_senior_citizen_floor"
+    name: "Objection handling: Elderly parents need lower floor unit"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_05_obj_senior_citizen_floor"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.25 cr"
+        objection_type: "only interested if lower floor 2nd or 3rd floor is available"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_06_obj_dlf_price_pushback"
+    name: "Objection handling: DLF 2.5 cr pushback for Gurugram Sector 63"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_06_obj_dlf_price_pushback"
+        target_project: "DLF The Arbour"
+        target_bhk: 3.0
+        budget_raw: "2.2 cr"
+        objection_type: "2.5 cr is exceeding my maximum sanctioned loan limit"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_07_obj_vaastu_compliance"
+    name: "Objection handling: Strict East-facing Vaastu requirement"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_07_obj_vaastu_compliance"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        objection_type: "family pandit only approved East-facing entry"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_08_obj_unresolved_dnc_exit"
+    name: "Objection handling failure leads to clean DNC opt-out"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    expected_tools: ["mark_dnc"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_08_obj_unresolved_dnc_exit"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "80 lakh"
+        objection_type: "too expensive, not fitting my budget at all"
+        wants_rera_check: false
+        wants_site_visit: false
+        wants_dnc: true
+        language_register: "hinglish"
+
+  - scenario_id: "rel_09_obj_carpet_efficiency"
+    name: "Objection handling: Loading percentage vs 780 sq.ft carpet"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_09_obj_carpet_efficiency"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        objection_type: "780 sq ft carpet looks a bit compact for 2 BHK"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_10_obj_dlf_possession_2027"
+    name: "Objection handling: DLF 2027 possession timeline buffer"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_10_obj_dlf_possession_2027"
+        target_project: "DLF The Arbour"
+        target_bhk: 3.0
+        budget_raw: "2.5 cr"
+        objection_type: "Q2 2027 is 3 years away, worried about construction delays"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  # --- 11-20: 8 kHz ASR Homophone Confusion Scenarios ---
+  - scenario_id: "rel_11_asr_core_for_crore"
+    name: "ASR Confusion: 'core' transcribed for 'crore' (1.2 core budget)"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.35
+      drop_postpositions: false
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_11_asr_core_for_crore"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 crore"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_12_asr_luck_for_lakh"
+    name: "ASR Confusion: 'luck' transcribed for 'lakh' (120 luck budget)"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.35
+      drop_postpositions: false
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_12_asr_luck_for_lakh"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "120 lakh"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_13_asr_bk_for_bhk"
+    name: "ASR Confusion: 'bk' / 'b k' transcribed for 'BHK'"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.30
+      drop_postpositions: false
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_13_asr_bk_for_bhk"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_14_asr_position_for_possession"
+    name: "ASR Confusion: 'position' transcribed for 'possession'"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.30
+      drop_postpositions: false
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_14_asr_position_for_possession"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_15_asr_walked_for_wakad"
+    name: "ASR Confusion: 'walked' / 'waakad' transcribed for 'Wakad'"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.35
+      drop_postpositions: false
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_15_asr_walked_for_wakad"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_16_asr_reera_for_rera"
+    name: "ASR Confusion: 'reera' / 'raira' transcribed for 'RERA'"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.30
+      drop_postpositions: false
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_16_asr_reera_for_rera"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_17_asr_carpit_for_carpet"
+    name: "ASR Confusion: 'carpit' transcribed for 'carpet area'"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.30
+      drop_postpositions: false
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_17_asr_carpit_for_carpet"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_18_asr_postposition_drop"
+    name: "ASR Acoustic Drop: Hindi postpositions dropped in transmission"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.40
+      drop_postpositions: true
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_18_asr_postposition_drop"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hindi_dominant"
+
+  - scenario_id: "rel_19_asr_barge_in_truncation"
+    name: "Barge-in: Buyer speech interruption truncated (<300ms)"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.20
+      barge_in_word_limit: 4
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_19_asr_barge_in_truncation"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_20_asr_combined_heavy_telephony"
+    name: "Heavy 8 kHz telephony perturbation (ASR homophones + postposition drop)"
+    max_turns: 6
+    asr_noise_profile: "heavy"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_20_asr_combined_heavy_telephony"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  # --- 21-30: Tool Fault Injection & Timeout Resilience Scenarios ---
+  - scenario_id: "rel_21_tool_fault_503_site_visit"
+    name: "Tool Fault: 503 Service Unavailable on book_site_visit (No invented action)"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    fault_rules:
+      book_site_visit: 503
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_21_tool_fault_503_site_visit"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_22_tool_fault_504_gateway_timeout"
+    name: "Tool Fault: 504 Gateway Timeout during site visit booking"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    fault_rules:
+      book_site_visit: 504
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_22_tool_fault_504_gateway_timeout"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_23_tool_fault_503_check_availability"
+    name: "Tool Fault: 503 on unit availability check"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    fault_rules:
+      check_unit_availability: 503
+    expected_tools: ["check_unit_availability"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_23_tool_fault_503_check_availability"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: false
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_24_tool_fault_503_mark_dnc"
+    name: "Tool Fault: 503 CRM failure during mark_dnc request"
+    max_turns: 4
+    asr_noise_profile: "clean"
+    fault_rules:
+      mark_dnc: 503
+    expected_tools: ["mark_dnc"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_24_tool_fault_503_mark_dnc"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: false
+        wants_dnc: true
+        language_register: "hinglish"
+
+  - scenario_id: "rel_25_tool_fault_all_crm_down"
+    name: "Tool Fault: Complete CRM outage (HTTP 503 on all tools)"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    fault_rules:
+      all: 503
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_25_tool_fault_all_crm_down"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_26_fault_plus_asr_homophone"
+    name: "Stress combo: 503 on visit booking + ASR 'core' homophone"
+    max_turns: 6
+    asr_noise_profile:
+      noise_rate: 0.30
+    fault_rules:
+      book_site_visit: 503
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_26_fault_plus_asr_homophone"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 crore"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_27_fault_retry_recovery"
+    name: "Tool fault recovery: Turn 1-2 ok, CRM failure on final booking turn"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    fault_rules:
+      book_site_visit: 503
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_27_fault_retry_recovery"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_28_dlf_tool_fault_503"
+    name: "DLF Gurugram visit booking with 503 CRM timeout"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    fault_rules:
+      book_site_visit: 503
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_28_dlf_tool_fault_503"
+        target_project: "DLF The Arbour"
+        target_bhk: 3.0
+        budget_raw: "2.5 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_29_brochure_whatsapp_fault_503"
+    name: "Tool Fault: WhatsApp brochure dispatch returns 503"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    fault_rules:
+      send_brochure_whatsapp: 503
+    expected_tools: []
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_29_brochure_whatsapp_fault_503"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: false
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "rel_30_circuit_breaker_stall_resilience"
+    name: "Circuit breaker test: Repeated agent stall triggers stall guard termination"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: []
+    fsm_spec:
+      agenda:
+        scenario_id: "rel_30_circuit_breaker_stall_resilience"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: false
+        wants_dnc: false
+        language_register: "hinglish"

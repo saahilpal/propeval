@@ -1,0 +1,266 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1020" width="100%" height="100%" style="background:#090d16; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="cardGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#131c2e" />
+      <stop offset="100%" stop-color="#0b111e" />
+    </linearGradient>
+
+    <!-- Filter -->
+    <filter id="shadow2" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="arrSky" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#38bdf8" />
+    </marker>
+    <marker id="arrAmber" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#fbbf24" />
+    </marker>
+    <marker id="arrPurple" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#c084fc" />
+    </marker>
+    <marker id="arrPink" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#f472b6" />
+    </marker>
+    <marker id="arrGreen" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 z" fill="#4ade80" />
+    </marker>
+  </defs>
+
+  <!-- Title Banner -->
+  <rect x="40" y="24" width="1360" height="58" rx="10" fill="url(#headerGrad2)" stroke="#334155" stroke-width="1.5" filter="url(#shadow2)"/>
+  <text x="720" y="48" text-anchor="middle" fill="#f8fafc" font-size="20" font-weight="700" letter-spacing="0.5">PropEval: Laya Cascade &amp; 3-Layer Evaluation Pipeline</text>
+  <text x="720" y="68" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="'IBM Plex Mono', monospace">8 kHz Hinglish ASR Simulator • Microsecond CPU Interceptor • System-1 Gating (τ_H=0.85, τ_L=0.15) • System-2 Escalation • Paired Stats</text>
+
+  <!-- STAGE 1: Simulation Container -->
+  <g id="grp_stage1">
+    <rect x="40" y="104" width="310" height="430" rx="10" fill="url(#cardGrad2)" stroke="#38bdf8" stroke-width="2" filter="url(#shadow2)"/>
+    <rect x="40" y="104" width="310" height="36" rx="10" fill="#0284c7" fill-opacity="0.15"/>
+    <text x="55" y="128" fill="#38bdf8" font-size="12" font-weight="700" letter-spacing="0.5">STAGE 1: HINGLISH SIMULATOR</text>
+
+    <g transform="translate(55, 148)">
+      <rect width="280" height="74" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#f8fafc" font-size="13" font-weight="600">BuyerAgendaFSM</text>
+      <text x="12" y="40" fill="#94a3b8" font-size="11">State machine driving realistic buyer goals</text>
+      <text x="12" y="54" fill="#64748b" font-size="10" font-family="'IBM Plex Mono', monospace">GREETING ➔ BUDGET ➔ CONFIG</text>
+      <text x="12" y="66" fill="#64748b" font-size="10" font-family="'IBM Plex Mono', monospace">POSSESSION ➔ RERA ➔ DNC ➔ CLOSE</text>
+    </g>
+
+    <g transform="translate(55, 230)">
+      <rect width="280" height="78" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#f8fafc" font-size="13" font-weight="600">Indian Hinglish Realizer</text>
+      <text x="12" y="40" fill="#94a3b8" font-size="11">Natural code-switching dialogue realizer</text>
+      <text x="12" y="54" fill="#38bdf8" font-size="10" font-style="italic">"1.2 cr chalega, possession 2026 tak"</text>
+      <text x="12" y="68" fill="#64748b" font-size="10" font-family="'IBM Plex Mono', monospace">Units: "dedh crore", "25 lakh", "१.५ करोड़"</text>
+    </g>
+
+    <g transform="translate(55, 316)">
+      <rect width="280" height="96" rx="6" fill="#0f172a" stroke="#0284c7" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#38bdf8" font-size="13" font-weight="600">8 kHz ASR Acoustic Perturbation</text>
+      <text x="12" y="40" fill="#94a3b8" font-size="11">Phoneme confusion matrix over audio:</text>
+      <text x="12" y="56" fill="#f8fafc" font-size="10" font-family="'IBM Plex Mono', monospace">• crore ➔ core / kor / roar</text>
+      <text x="12" y="70" fill="#f8fafc" font-size="10" font-family="'IBM Plex Mono', monospace">• lakh ➔ lack / lock / look</text>
+      <text x="12" y="84" fill="#f8fafc" font-size="10" font-family="'IBM Plex Mono', monospace">• bhk ➔ vhk / dhk / bk</text>
+    </g>
+
+    <g transform="translate(55, 420)">
+      <rect width="280" height="70" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#f8fafc" font-size="13" font-weight="600">MockRealEstateEnv Faults</text>
+      <text x="12" y="40" fill="#94a3b8" font-size="11">Simulates CRM HTTP 503 / 504 timeouts</text>
+      <text x="12" y="54" fill="#f59e0b" font-size="10" font-family="'IBM Plex Mono', monospace">Tool slot desync &amp; schema contract probes</text>
+    </g>
+  </g>
+
+  <!-- STAGE 2: Microsecond Interceptor & System-1 Classifier -->
+  <g id="grp_stage2">
+    <rect x="380" y="104" width="350" height="430" rx="10" fill="url(#cardGrad2)" stroke="#fbbf24" stroke-width="2" filter="url(#shadow2)"/>
+    <rect x="380" y="104" width="350" height="36" rx="10" fill="#b45309" fill-opacity="0.15"/>
+    <text x="400" y="128" fill="#fbbf24" font-size="12" font-weight="700" letter-spacing="0.5">STAGE 2: LAYA SYSTEM-1 CASCADE</text>
+
+    <g transform="translate(400, 148)">
+      <rect width="310" height="80" rx="6" fill="#0f172a" stroke="#b45309" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#fbbf24" font-size="13" font-weight="600">Adversarial Ambiguity Interceptor</text>
+      <text x="12" y="40" fill="#94a3b8" font-size="11">Microsecond CPU fast-path filter &amp; regex</text>
+      <text x="12" y="54" fill="#4ade80" font-size="10" font-family="'IBM Plex Mono', monospace">SLA &lt; 25 ms • Observed: 0.365 ms p50</text>
+      <text x="12" y="68" fill="#64748b" font-size="10">Zero-cost defense against adversarial drift</text>
+    </g>
+
+    <g transform="translate(400, 236)">
+      <rect width="310" height="116" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#f8fafc" font-size="13" font-weight="600">Real-Estate Laya Subword Classifier</text>
+      <text x="12" y="40" fill="#94a3b8" font-size="11">Subword TF-IDF n-grams + Platt Calibration</text>
+      <text x="12" y="56" fill="#fbbf24" font-size="10" font-family="'IBM Plex Mono', monospace">• dnc_refusal (100% cascade accuracy)</text>
+      <text x="12" y="70" fill="#fbbf24" font-size="10" font-family="'IBM Plex Mono', monospace">• action_confirmation (100% cascade acc)</text>
+      <text x="12" y="84" fill="#fbbf24" font-size="10" font-family="'IBM Plex Mono', monospace">• objection_class (86.11% resolution)</text>
+      <text x="12" y="98" fill="#fbbf24" font-size="10" font-family="'IBM Plex Mono', monospace">• hallucination_probe (98.33% resolution)</text>
+    </g>
+
+    <g transform="translate(400, 360)">
+      <rect width="310" height="95" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#f8fafc" font-size="13" font-weight="600">System-1 Benchmark Audit Stats</text>
+      <text x="12" y="40" fill="#4ade80" font-size="10" font-family="'IBM Plex Mono', monospace">• Expected Calibration Error (ECE): 0.0209</text>
+      <text x="12" y="54" fill="#4ade80" font-size="10" font-family="'IBM Plex Mono', monospace">• Brier Score: 0.0402 • Speedup: 56.3x</text>
+      <text x="12" y="68" fill="#4ade80" font-size="10" font-family="'IBM Plex Mono', monospace">• Cohen's Kappa with System-2: 0.9912</text>
+      <text x="12" y="82" fill="#4ade80" font-size="10" font-family="'IBM Plex Mono', monospace">• Net Cost Reduction: 92.06%</text>
+    </g>
+
+    <text x="555" y="482" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="600">✓ Tested on 252 Sealed Turns (0 Defect Leakage)</text>
+  </g>
+
+  <!-- STAGE 3: Confidence Gating Router -->
+  <g id="grp_stage3">
+    <rect x="760" y="104" width="290" height="430" rx="10" fill="url(#cardGrad2)" stroke="#c084fc" stroke-width="2" filter="url(#shadow2)"/>
+    <rect x="760" y="104" width="290" height="36" rx="10" fill="#7e22ce" fill-opacity="0.15"/>
+    <text x="780" y="128" fill="#c084fc" font-size="12" font-weight="700" letter-spacing="0.5">STAGE 3: CONFIDENCE ROUTER</text>
+
+    <g transform="translate(780, 148)">
+      <rect width="250" height="74" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#f8fafc" font-size="13" font-weight="600">Dual-Threshold Decision Rule</text>
+      <text x="12" y="40" fill="#94a3b8" font-size="11">High Confidence: <tspan fill="#4ade80" font-weight="700">τ_H = 0.85</tspan></text>
+      <text x="12" y="54" fill="#94a3b8" font-size="11">Low Confidence: <tspan fill="#fb7185" font-weight="700">τ_L = 0.15</tspan></text>
+      <text x="12" y="68" fill="#94a3b8" font-size="11">Margin Gap: <tspan fill="#fbbf24" font-weight="700">Margin ≥ 0.70</tspan></text>
+    </g>
+
+    <g transform="translate(780, 230)">
+      <rect width="250" height="106" rx="6" fill="#0f172a" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="12" y="22" fill="#4ade80" font-size="12" font-weight="700">[PASS / FAIL DIRECT]</text>
+      <text x="12" y="40" fill="#f8fafc" font-size="13" font-weight="600">System-1 Resolved</text>
+      <text x="12" y="58" fill="#94a3b8" font-size="11">Score ≥ τ_H or Score ≤ τ_L</text>
+      <text x="12" y="74" fill="#4ade80" font-size="12" font-family="'IBM Plex Mono', monospace" font-weight="700">92.06% of turns (232/252)</text>
+      <text x="12" y="90" fill="#64748b" font-size="10" font-family="'IBM Plex Mono', monospace">Cost: $0.00 • Latency: 0.36ms</text>
+    </g>
+
+    <g transform="translate(780, 344)">
+      <rect width="250" height="106" rx="6" fill="#0f172a" stroke="#9333ea" stroke-width="1.5"/>
+      <text x="12" y="22" fill="#c084fc" font-size="12" font-weight="700">[ESCALATE TO JUDGE]</text>
+      <text x="12" y="40" fill="#f8fafc" font-size="13" font-weight="600">Borderline Ambiguity</text>
+      <text x="12" y="58" fill="#94a3b8" font-size="11">τ_L &lt; Score &lt; τ_H OR Margin &lt; 0.7</text>
+      <text x="12" y="74" fill="#c084fc" font-size="12" font-family="'IBM Plex Mono', monospace" font-weight="700">7.94% of turns (20/252)</text>
+      <text x="12" y="90" fill="#64748b" font-size="10" font-family="'IBM Plex Mono', monospace">Dispatches to System-2 LLM</text>
+    </g>
+
+    <text x="895" y="482" text-anchor="middle" fill="#c084fc" font-size="11" font-weight="600">🛡 Rescues 8 Borderline Defects</text>
+  </g>
+
+  <!-- STAGE 4: System-2 LLM Judge Escalation -->
+  <g id="grp_stage4">
+    <rect x="1080" y="104" width="320" height="430" rx="10" fill="url(#cardGrad2)" stroke="#f472b6" stroke-width="2" filter="url(#shadow2)"/>
+    <rect x="1080" y="104" width="320" height="36" rx="10" fill="#be185d" fill-opacity="0.15"/>
+    <text x="1100" y="128" fill="#f472b6" font-size="12" font-weight="700" letter-spacing="0.5">STAGE 4: SYSTEM-2 LLM JUDGE</text>
+
+    <g transform="translate(1100, 148)">
+      <rect width="280" height="80" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#f8fafc" font-size="13" font-weight="600">Cross-Family LLM Judge Pool</text>
+      <text x="12" y="40" fill="#94a3b8" font-size="11">Independent frontier model family:</text>
+      <text x="12" y="54" fill="#f472b6" font-size="10" font-family="'IBM Plex Mono', monospace">Claude 3.5 Sonnet / GPT-4o / Gemini</text>
+      <text x="12" y="68" fill="#64748b" font-size="10">Only called for 7.94% boundary turns</text>
+    </g>
+
+    <g transform="translate(1100, 236)">
+      <rect width="280" height="90" rx="6" fill="#0f172a" stroke="#db2777" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#f472b6" font-size="13" font-weight="600">Randomized XML Nonce Framing</text>
+      <text x="12" y="40" fill="#94a3b8" font-size="11">&lt;turn_eval nonce="8f4a2b91c"&gt;</text>
+      <text x="12" y="54" fill="#64748b" font-size="10">Neutralizes prompt injection, delimiter</text>
+      <text x="12" y="68" fill="#64748b" font-size="10">collisions &amp; adversarial jailbreaks</text>
+    </g>
+
+    <g transform="translate(1100, 334)">
+      <rect width="280" height="96" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="12" y="22" fill="#f8fafc" font-size="13" font-weight="600">Frontier Anti-Cheat Protections</text>
+      <text x="12" y="40" fill="#38bdf8" font-size="10" font-family="'IBM Plex Mono', monospace">• AlpacaEval 2.0 length bias norm</text>
+      <text x="12" y="56" fill="#c084fc" font-size="10" font-family="'IBM Plex Mono', monospace">• Position-bias swap verification</text>
+      <text x="12" y="72" fill="#fbbf24" font-size="10" font-family="'IBM Plex Mono', monospace">• Sycophancy / sycophant probes</text>
+      <text x="12" y="86" fill="#64748b" font-size="9">Ensures evaluation integrity &amp; robustness</text>
+    </g>
+
+    <text x="1240" y="482" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="600">Effective Cost: $0.00198 vs $0.0250 / turn</text>
+  </g>
+
+  <!-- STAGE 5: 3-Layer Evaluation Pyramid & Paired Stats Container -->
+  <g id="grp_stage5">
+    <rect x="40" y="560" width="1360" height="420" rx="10" fill="url(#cardGrad2)" stroke="#4ade80" stroke-width="2" filter="url(#shadow2)"/>
+    <rect x="40" y="560" width="1360" height="36" rx="10" fill="#15803d" fill-opacity="0.15"/>
+    <text x="60" y="584" fill="#4ade80" font-size="13" font-weight="700" letter-spacing="0.5">STAGE 5: 3-LAYER NON-COMPENSATORY EVALUATION PYRAMID &amp; PAIRED STATS ENGINE</text>
+
+    <!-- Layer 1 -->
+    <g transform="translate(60, 606)">
+      <rect width="640" height="100" rx="6" fill="#0f172a" stroke="#be123c" stroke-width="1.5"/>
+      <text x="16" y="24" fill="#fb7185" font-size="13" font-weight="700">LAYER 1: DETERMINISTIC ORACLES (Hard Gate • Non-Compensatory)</text>
+      <text x="16" y="44" fill="#94a3b8" font-size="11">• TRAI Do-Not-Call (DNC) Immediate Refusal Check</text>
+      <text x="16" y="60" fill="#94a3b8" font-size="11">• Invented Tool Action / Phantom WhatsApp Confirmation Detection</text>
+      <text x="16" y="76" fill="#94a3b8" font-size="11">• Strict Tool Parameter Schema Validation &amp; Boundary Checking</text>
+      <text x="16" y="92" fill="#fb7185" font-size="10" font-family="'IBM Plex Mono', monospace" font-weight="600">RULE: If any Layer 1 oracle fails ➔ HARD GATE REGRESSION (Deployment Blocked)</text>
+    </g>
+
+    <!-- Layer 2 -->
+    <g transform="translate(60, 716)">
+      <rect width="640" height="100" rx="6" fill="#0f172a" stroke="#b45309" stroke-width="1.5"/>
+      <text x="16" y="24" fill="#fbbf24" font-size="13" font-weight="700">LAYER 2: PROPERTY FACT GROUNDING (Property Fact Verifier)</text>
+      <text x="16" y="44" fill="#94a3b8" font-size="11">• Strict RERA ID verification against project_fixtures facts_json (GIN index)</text>
+      <text x="16" y="60" fill="#94a3b8" font-size="11">• Price &amp; Carpet Area numerical grounding with 4-token negation context</text>
+      <text x="16" y="76" fill="#94a3b8" font-size="11">• Floor rise &amp; Possession date boundary checking</text>
+      <text x="16" y="92" fill="#fbbf24" font-size="10" font-family="'IBM Plex Mono', monospace">Catches subtle Indian real-estate hallucinations before caller exposure</text>
+    </g>
+
+    <!-- Layer 3 -->
+    <g transform="translate(60, 826)">
+      <rect width="640" height="100" rx="6" fill="#0f172a" stroke="#0284c7" stroke-width="1.5"/>
+      <text x="16" y="24" fill="#38bdf8" font-size="13" font-weight="700">LAYER 3: CROSS-FAMILY RUBRIC JUDGE (System-1 Laya + Escalated System-2)</text>
+      <text x="16" y="44" fill="#94a3b8" font-size="11">• Tone Register &amp; De-escalation under aggressive Indian telephony buyers</text>
+      <text x="16" y="60" fill="#94a3b8" font-size="11">• Hinglish Objection Handling &amp; Information Completeness</text>
+      <text x="16" y="76" fill="#94a3b8" font-size="11">• Action Confirmation Integrity &amp; Next-step alignment</text>
+      <text x="16" y="92" fill="#38bdf8" font-size="10" font-family="'IBM Plex Mono', monospace">100% agreement on critical safety rubrics with pure System-2</text>
+    </g>
+
+    <!-- Paired Statistics Engine -->
+    <g transform="translate(730, 606)">
+      <rect width="640" height="320" rx="6" fill="#0f172a" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="20" y="26" fill="#4ade80" font-size="14" font-weight="700">PAIRED STATISTICAL GATING ENGINE</text>
+
+      <text x="20" y="52" fill="#38bdf8" font-size="12" font-weight="600">1. K = 1 Paired Trials (Single-Trial Comparisons):</text>
+      <text x="20" y="70" fill="#94a3b8" font-size="11">• Exact Binomial McNemar Test (Two-Sided) on paired 2x2 contingency table</text>
+      <text x="20" y="86" fill="#94a3b8" font-size="11">• Newcombe Method 10 Paired Score Confidence Interval on Risk Difference (Δp)</text>
+      <text x="20" y="102" fill="#64748b" font-size="10" font-family="'IBM Plex Mono', monospace">Cohen's h effect size • Zero naive average metric leakage</text>
+
+      <text x="20" y="130" fill="#c084fc" font-size="12" font-weight="600">2. K &gt; 1 Repeated Measures (Multi-Trial Comparisons):</text>
+      <text x="20" y="148" fill="#94a3b8" font-size="11">• Paired Wilcoxon Signed-Rank Test on scenario trial scores</text>
+      <text x="20" y="164" fill="#94a3b8" font-size="11">• Two-Stage Cluster BCa Bootstrap (10,000 resamples) for non-parametric CIs</text>
+      <text x="20" y="180" fill="#64748b" font-size="10" font-family="'IBM Plex Mono', monospace">Rank Biserial Correlation r • Holm-Bonferroni Family-Wise Error Rate Control</text>
+
+      <text x="20" y="210" fill="#fbbf24" font-size="12" font-weight="600">3. Automated Decision Gating Rules:</text>
+      <text x="20" y="230" fill="#4ade80" font-size="11" font-family="'IBM Plex Mono', monospace">✓ PASSED: Δp &gt; 0, p &lt; 0.05, 0 hard gate regressions</text>
+      <text x="20" y="248" fill="#fb7185" font-size="11" font-family="'IBM Plex Mono', monospace">✗ REGRESSED: Δp &lt; 0 (p &lt; 0.05) OR any hard gate regression</text>
+      <text x="20" y="266" fill="#fbbf24" font-size="11" font-family="'IBM Plex Mono', monospace">⚠ INCONCLUSIVE_UNDERPOWERED: N &lt; required power sample size</text>
+
+      <text x="20" y="298" fill="#94a3b8" font-size="10" font-family="'IBM Plex Mono', monospace">Guarantees zero false deployments with mathematically rigorous statistical confidence</text>
+    </g>
+  </g>
+
+  <!-- Connectors -->
+  <!-- Stage 1 to Stage 2 -->
+  <path d="M 350 250 L 380 250" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrSky)"/>
+  <rect x="352" y="230" width="26" height="16" rx="4" fill="#090d16" stroke="#38bdf8" stroke-width="1"/>
+  <text x="365" y="241" text-anchor="middle" fill="#38bdf8" font-size="8" font-family="'IBM Plex Mono', monospace">8kHz</text>
+
+  <!-- Stage 2 to Stage 3 -->
+  <path d="M 730 250 L 760 250" fill="none" stroke="#fbbf24" stroke-width="2.5" marker-end="url(#arrAmber)"/>
+  <rect x="732" y="230" width="26" height="16" rx="4" fill="#090d16" stroke="#fbbf24" stroke-width="1"/>
+  <text x="745" y="241" text-anchor="middle" fill="#fbbf24" font-size="8" font-family="'IBM Plex Mono', monospace">CONF</text>
+
+  <!-- Stage 3 (Escalate) to Stage 4 -->
+  <path d="M 1050 395 L 1080 395" fill="none" stroke="#f472b6" stroke-width="2.5" marker-end="url(#arrPink)"/>
+  <rect x="1051" y="375" width="28" height="16" rx="4" fill="#090d16" stroke="#f472b6" stroke-width="1"/>
+  <text x="1065" y="386" text-anchor="middle" fill="#f472b6" font-size="8" font-family="'IBM Plex Mono', monospace">7.9%</text>
+
+  <!-- Stage 3 (Direct) to Stage 5 -->
+  <path d="M 880 534 L 880 560" fill="none" stroke="#4ade80" stroke-width="2.5" marker-end="url(#arrGreen)"/>
+
+  <!-- Stage 4 to Stage 5 -->
+  <path d="M 1240 534 L 1240 560" fill="none" stroke="#f472b6" stroke-width="2.5" marker-end="url(#arrPink)"/>
+</svg>

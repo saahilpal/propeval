@@ -1,0 +1,100 @@
+{
+  "dataset_version": "1.0.0",
+  "total_records": 1680,
+  "splits": {
+    "train": {
+      "path": "datasets/system1/train.jsonl",
+      "count": 1176,
+      "percentage": 70.0,
+      "sha256": "def11441bb2fff4ccae831c3d09851f50091214107a4d84ba1a1461d31c07a41",
+      "accessible_to_training": true
+    },
+    "val": {
+      "path": "datasets/system1/val.jsonl",
+      "count": 252,
+      "percentage": 15.0,
+      "sha256": "01aeb881f657da6478f114244727efa2c6b61cdd2dc6d1c505d7b67134e7fb4d",
+      "accessible_to_training": false,
+      "accessible_to_validation": true
+    },
+    "test": {
+      "path": "datasets/system1/test.jsonl",
+      "vault_location": "vault/sealed_blind_test.jsonl",
+      "count": 252,
+      "percentage": 15.0,
+      "sha256": "ff45cbfff04b6e082050792c8252ffa3f3bda100e41ba4f98ce5b32f92197d60",
+      "permissions": "chmod 444 (read-only sealed)",
+      "accessible_to_training": false,
+      "accessible_to_validation": false,
+      "held_out_for_blind_benchmark": true
+    },
+    "ood_test": {
+      "path": "datasets/system1/ood_test.jsonl",
+      "count": 126,
+      "percentage": 7.0,
+      "sha256": "b23d820eeaac003e19395440f1a0e9d15f91943c3e647f427ac06cecbd04c088",
+      "description": "Clean out-of-distribution generalization test set with zero template overlap",
+      "accessible_to_training": false,
+      "accessible_to_validation": false,
+      "held_out_for_ood_benchmark": true
+    }
+  },
+  "tasks": {
+    "dnc_refusal": {
+      "description": "PropEval System-1 dnc_refusal evaluation head",
+      "train_count": 280,
+      "val_count": 60,
+      "test_count": 60,
+      "total_count": 400,
+      "classes": [
+        "DNC_REFUSAL",
+        "NORMAL_CONVERSATION"
+      ],
+      "ood_count": 30
+    },
+    "action_confirmation": {
+      "description": "PropEval System-1 action_confirmation evaluation head",
+      "train_count": 280,
+      "val_count": 60,
+      "test_count": 60,
+      "total_count": 400,
+      "classes": [
+        "ACTION_CONFIRMED",
+        "NO_ACTION_CONFIRMED"
+      ],
+      "ood_count": 30
+    },
+    "prompt_injection": {
+      "description": "PropEval System-1 prompt_injection evaluation head",
+      "train_count": 280,
+      "val_count": 60,
+      "test_count": 60,
+      "total_count": 400,
+      "classes": [
+        "PROMPT_INJECTION",
+        "BENIGN_QUERY"
+      ],
+      "ood_count": 30
+    },
+    "objection_class": {
+      "description": "PropEval System-1 objection_class evaluation head",
+      "train_count": 336,
+      "val_count": 72,
+      "test_count": 72,
+      "total_count": 480,
+      "classes": [
+        "PRICE_TOO_HIGH",
+        "POSSESSION_DELAY",
+        "RERA_APPROVAL",
+        "LOCATION_CONNECTIVITY",
+        "BUILDER_REPUTATION",
+        "NONE"
+      ],
+      "ood_count": 36
+    }
+  },
+  "hygiene": {
+    "deduplication": "Normalized NFKC lowercase SHA-256 globally unique across all splits",
+    "leakage_verification": "Zero overlap between train, val, and held-out test partitions"
+  }
+}

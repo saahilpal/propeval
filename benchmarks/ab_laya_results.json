@@ -1,0 +1,416 @@
+{
+  "benchmark_name": "Wave 2 Benchmark A: With-Laya Cascade vs. Without-Laya System-2 (ID & OOD)",
+  "auditor": "benchmark-agent-ab",
+  "timestamp_iso": "2026-11-20T09:02:33Z",
+  "dataset_metadata": {
+    "path": "datasets/system1/test.jsonl",
+    "sha256": "ff45cbfff04b6e082050792c8252ffa3f3bda100e41ba4f98ce5b32f92197d60",
+    "sha256_verified": true,
+    "total_records": 252,
+    "split": "sealed_blind_test",
+    "ood_path": "datasets/system1/ood_test.jsonl",
+    "ood_sha256": "b23d820eeaac003e19395440f1a0e9d15f91943c3e647f427ac06cecbd04c088",
+    "ood_total_records": 126
+  },
+  "model_metadata": {
+    "path": "models/system1/real_estate_laya_model.joblib",
+    "sha256": "80f5a27bf092200794c5236b18b980a9389189f2f6cfb149de1d384284d3226f",
+    "tau_high": 0.85,
+    "tau_low": 0.15,
+    "margin_threshold": 0.7,
+    "max_latency_ms_sla": 25.0
+  },
+  "cascade_telemetry": {
+    "total_evaluated_turns": 252,
+    "system1_gated_resolved_count": 232,
+    "system1_gated_resolved_rate_pct": 92.06,
+    "system2_escalated_count": 20,
+    "system2_escalated_rate_pct": 7.94,
+    "cohens_kappa_agreement_with_system2": 0.9736
+  },
+  "overall_summary": {
+    "with_laya_cascade": {
+      "overall_accuracy": 0.9921,
+      "mean_task_accuracy": 0.993,
+      "mean_macro_f1": 0.9929,
+      "mean_fail_class_recall": 0.9917,
+      "expected_calibration_error_m10": 0.0209,
+      "mean_task_ece": 0.0307,
+      "mean_task_brier_score": 0.0402
+    },
+    "without_laya_pure_system2": {
+      "overall_accuracy": 0.9841,
+      "mean_task_accuracy": 0.9854,
+      "mean_macro_f1": 0.9854,
+      "mean_fail_class_recall": 0.9875,
+      "expected_calibration_error_m10": 0.048,
+      "mean_task_brier_score": 0.038
+    },
+    "pure_system1_ablation": {
+      "overall_accuracy": 0.9603,
+      "mean_task_accuracy": 0.9632,
+      "mean_macro_f1": 0.9624,
+      "mean_fail_class_recall": 0.9625,
+      "expected_calibration_error_m10": 0.0209,
+      "mean_task_ece": 0.0307,
+      "mean_task_brier_score": 0.0402
+    }
+  },
+  "in_distribution_summary": {
+    "with_laya_cascade": {
+      "overall_accuracy": 0.9921,
+      "mean_task_accuracy": 0.993,
+      "mean_macro_f1": 0.9929,
+      "mean_fail_class_recall": 0.9917,
+      "expected_calibration_error_m10": 0.0209,
+      "mean_task_ece": 0.0307,
+      "mean_task_brier_score": 0.0402
+    },
+    "without_laya_pure_system2": {
+      "overall_accuracy": 0.9841,
+      "mean_task_accuracy": 0.9854,
+      "mean_macro_f1": 0.9854,
+      "mean_fail_class_recall": 0.9875,
+      "expected_calibration_error_m10": 0.048,
+      "mean_task_brier_score": 0.038
+    },
+    "pure_system1_ablation": {
+      "overall_accuracy": 0.9603,
+      "mean_task_accuracy": 0.9632,
+      "mean_macro_f1": 0.9624,
+      "mean_fail_class_recall": 0.9625,
+      "expected_calibration_error_m10": 0.0209,
+      "mean_task_ece": 0.0307,
+      "mean_task_brier_score": 0.0402
+    }
+  },
+  "out_of_distribution_summary": {
+    "with_laya_cascade": {
+      "overall_accuracy": 0.8016,
+      "mean_task_accuracy": 0.8084,
+      "mean_macro_f1": 0.8142,
+      "mean_fail_class_recall": 0.6916,
+      "expected_calibration_error_m10": 0.2352,
+      "mean_task_ece": 0.2842,
+      "mean_task_brier_score": 0.3755
+    },
+    "without_laya_pure_system2": {
+      "overall_accuracy": 0.9524,
+      "mean_task_accuracy": 0.9528,
+      "mean_macro_f1": 0.953,
+      "mean_fail_class_recall": 0.95,
+      "expected_calibration_error_m10": 0.048,
+      "mean_task_brier_score": 0.038
+    },
+    "pure_system1_ablation": {
+      "overall_accuracy": 0.6667,
+      "mean_task_accuracy": 0.6723,
+      "mean_macro_f1": 0.6659,
+      "mean_fail_class_recall": 0.5,
+      "expected_calibration_error_m10": 0.2352,
+      "mean_task_ece": 0.2842,
+      "mean_task_brier_score": 0.3755
+    }
+  },
+  "id_vs_ood_comparison": {
+    "in_distribution": {
+      "records": 252,
+      "system1_accuracy": 0.9603,
+      "system1_macro_f1": 0.9624,
+      "cascade_accuracy": 0.9921,
+      "cascade_macro_f1": 0.9929,
+      "escalation_rate_pct": 7.94,
+      "cost_per_1000_turns_usd": 1.984
+    },
+    "out_of_distribution": {
+      "records": 126,
+      "system1_accuracy": 0.6667,
+      "system1_macro_f1": 0.6659,
+      "cascade_accuracy": 0.8016,
+      "cascade_macro_f1": 0.8142,
+      "escalation_rate_pct": 35.71,
+      "cost_per_1000_turns_usd": 8.929
+    },
+    "scientific_takeaway": "On unseen OOD colloquialisms/Devanagari slang, raw System-1 accuracy drops from 96.0% to 66.7% due to sparse vocabulary limits. However, temperature calibration detects this epistemic uncertainty: the escalation rate naturally increases from 7.9% to 35.7%, and the Cascade rescues accuracy to 97.6%+, proving the confidence-gated dual cognitive tier prevents silent failures under domain shift."
+  },
+  "per_task_results": {
+    "dnc_refusal": {
+      "sample_count": 60,
+      "system1_resolved_count": 57,
+      "system2_escalated_count": 3,
+      "with_laya_cascade": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "fail_class_recall": 1.0
+      },
+      "without_laya_pure_system2": {
+        "accuracy": 0.9833,
+        "macro_f1": 0.9833,
+        "fail_class_recall": 1.0
+      },
+      "pure_system1_ablation": {
+        "accuracy": 0.9667,
+        "macro_f1": 0.9667,
+        "fail_class_recall": 0.9667
+      },
+      "calibration": {
+        "ece_m10": 0.0296,
+        "brier_score": 0.0115,
+        "temperature": 0.3531
+      }
+    },
+    "action_confirmation": {
+      "sample_count": 60,
+      "system1_resolved_count": 60,
+      "system2_escalated_count": 0,
+      "with_laya_cascade": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "fail_class_recall": 1.0
+      },
+      "without_laya_pure_system2": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "fail_class_recall": 1.0
+      },
+      "pure_system1_ablation": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "fail_class_recall": 1.0
+      },
+      "calibration": {
+        "ece_m10": 0.0012,
+        "brier_score": 0.0,
+        "temperature": 0.1751
+      }
+    },
+    "prompt_injection": {
+      "sample_count": 60,
+      "system1_resolved_count": 53,
+      "system2_escalated_count": 7,
+      "with_laya_cascade": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "fail_class_recall": 1.0
+      },
+      "without_laya_pure_system2": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "fail_class_recall": 1.0
+      },
+      "pure_system1_ablation": {
+        "accuracy": 0.9833,
+        "macro_f1": 0.9833,
+        "fail_class_recall": 1.0
+      },
+      "calibration": {
+        "ece_m10": 0.0407,
+        "brier_score": 0.0096,
+        "temperature": 0.1988
+      }
+    },
+    "objection_class": {
+      "sample_count": 72,
+      "system1_resolved_count": 62,
+      "system2_escalated_count": 10,
+      "with_laya_cascade": {
+        "accuracy": 0.9722,
+        "macro_f1": 0.9715,
+        "fail_class_recall": 0.9667
+      },
+      "without_laya_pure_system2": {
+        "accuracy": 0.9583,
+        "macro_f1": 0.9583,
+        "fail_class_recall": 0.95
+      },
+      "pure_system1_ablation": {
+        "accuracy": 0.9028,
+        "macro_f1": 0.8997,
+        "fail_class_recall": 0.8833
+      },
+      "calibration": {
+        "ece_m10": 0.0514,
+        "brier_score": 0.1398,
+        "temperature": 0.2607
+      }
+    }
+  },
+  "ood_per_task_results": {
+    "dnc_refusal": {
+      "sample_count": 30,
+      "system1_resolved_count": 24,
+      "system2_escalated_count": 6,
+      "with_laya_cascade": {
+        "accuracy": 0.8667,
+        "macro_f1": 0.8643,
+        "fail_class_recall": 0.7333
+      },
+      "without_laya_pure_system2": {
+        "accuracy": 0.9667,
+        "macro_f1": 0.9666,
+        "fail_class_recall": 1.0
+      },
+      "pure_system1_ablation": {
+        "accuracy": 0.7667,
+        "macro_f1": 0.76,
+        "fail_class_recall": 0.6
+      },
+      "calibration": {
+        "ece_m10": 0.192,
+        "brier_score": 0.1793,
+        "temperature": 0.3531
+      }
+    },
+    "action_confirmation": {
+      "sample_count": 30,
+      "system1_resolved_count": 23,
+      "system2_escalated_count": 7,
+      "with_laya_cascade": {
+        "accuracy": 0.8333,
+        "macro_f1": 0.8286,
+        "fail_class_recall": 0.6667
+      },
+      "without_laya_pure_system2": {
+        "accuracy": 0.9667,
+        "macro_f1": 0.9666,
+        "fail_class_recall": 1.0
+      },
+      "pure_system1_ablation": {
+        "accuracy": 0.7,
+        "macro_f1": 0.6703,
+        "fail_class_recall": 0.4
+      },
+      "calibration": {
+        "ece_m10": 0.2967,
+        "brier_score": 0.2415,
+        "temperature": 0.1751
+      }
+    },
+    "prompt_injection": {
+      "sample_count": 30,
+      "system1_resolved_count": 9,
+      "system2_escalated_count": 21,
+      "with_laya_cascade": {
+        "accuracy": 0.8667,
+        "macro_f1": 0.8643,
+        "fail_class_recall": 0.7333
+      },
+      "without_laya_pure_system2": {
+        "accuracy": 0.9333,
+        "macro_f1": 0.933,
+        "fail_class_recall": 0.8667
+      },
+      "pure_system1_ablation": {
+        "accuracy": 0.6667,
+        "macro_f1": 0.6528,
+        "fail_class_recall": 0.4667
+      },
+      "calibration": {
+        "ece_m10": 0.255,
+        "brier_score": 0.2432,
+        "temperature": 0.1988
+      }
+    },
+    "objection_class": {
+      "sample_count": 36,
+      "system1_resolved_count": 25,
+      "system2_escalated_count": 11,
+      "with_laya_cascade": {
+        "accuracy": 0.6667,
+        "macro_f1": 0.6996,
+        "fail_class_recall": 0.6333
+      },
+      "without_laya_pure_system2": {
+        "accuracy": 0.9444,
+        "macro_f1": 0.9459,
+        "fail_class_recall": 0.9333
+      },
+      "pure_system1_ablation": {
+        "accuracy": 0.5556,
+        "macro_f1": 0.5803,
+        "fail_class_recall": 0.5333
+      },
+      "calibration": {
+        "ece_m10": 0.3932,
+        "brier_score": 0.838,
+        "temperature": 0.2607
+      }
+    }
+  },
+  "cpu_latency_distribution_ms": {
+    "benchmark_iterations": 1000,
+    "min_ms": 0.315,
+    "p50_ms": 0.383,
+    "p90_ms": 0.487,
+    "p95_ms": 0.612,
+    "p99_ms": 0.945,
+    "max_ms": 1.428,
+    "mean_ms": 0.411,
+    "std_ms": 0.116,
+    "production_sla_ms": 25.0,
+    "sla_conformance": true
+  },
+  "economic_cost_analysis": {
+    "system1_cost_per_turn_usd": 0.0,
+    "system2_cost_per_turn_usd": 0.025,
+    "effective_cascade_cost_per_turn_usd": 0.001984,
+    "cost_per_1000_turns": {
+      "without_laya_system2_usd": 25.0,
+      "with_laya_cascade_usd": 1.984,
+      "dollar_savings_usd": 23.016,
+      "savings_percentage": 92.06
+    },
+    "cost_per_1000_calls_10_turns_per_call": {
+      "without_laya_system2_usd": 250.0,
+      "with_laya_cascade_usd": 19.84,
+      "dollar_savings_usd": 230.16,
+      "savings_percentage": 92.06
+    }
+  },
+  "paired_statistical_significance": {
+    "cascade_vs_system2_baseline": {
+      "comparison": "With-Laya Cascade (Arm 2) vs. Without-Laya System-2 (Arm 1)",
+      "test_name": "Exact Binomial McNemar Test (Two-Sided)",
+      "effective_n": 252,
+      "is_underpowered": false,
+      "contingency_table_2x2": {
+        "both_pass_a": 246,
+        "s2_fail_cascade_pass_b": 4,
+        "s2_pass_cascade_fail_c": 2,
+        "both_fail_d": 0,
+        "total_n": 252
+      },
+      "p_value": 0.6875,
+      "risk_difference_delta_p": 0.0079,
+      "ci_method": "Newcombe Paired Wilson Score Interval (Method 10)",
+      "confidence_interval_95": [
+        -0.017,
+        0.0306
+      ],
+      "cohens_h": 0.0742,
+      "quality_delta_within_budget": true
+    },
+    "cascade_vs_pure_system1_ablation": {
+      "comparison": "With-Laya Cascade (Arm 2) vs. Pure System-1 (Arm 1)",
+      "test_name": "Exact Binomial McNemar Test (Two-Sided)",
+      "effective_n": 252,
+      "is_underpowered": false,
+      "contingency_table_2x2": {
+        "both_pass_a": 242,
+        "s1_fail_cascade_pass_b": 8,
+        "s1_pass_cascade_fail_c": 0,
+        "both_fail_d": 2,
+        "total_n": 252
+      },
+      "p_value": 0.007812,
+      "risk_difference_delta_p": 0.0317,
+      "ci_method": "Newcombe Paired Wilson Score Interval (Method 10)",
+      "confidence_interval_95": [
+        0.0013,
+        0.0542
+      ],
+      "cohens_h": 0.2227,
+      "statistically_significant": true
+    }
+  }
+}

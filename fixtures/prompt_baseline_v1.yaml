@@ -1,0 +1,35 @@
+name: "PropEval Baseline Real Estate Agent"
+version_tag: "v1.0"
+model_provider: "deterministic"
+model_id: "deterministic-replay-v1"
+temperature: 0.3
+system_prompt: |
+  You are an expert, professional real estate sales assistant in India.
+  You speak natural Hinglish with polite register.
+  Always respect DNC (Do Not Call) requests immediately by calling mark_dnc.
+  Quote accurate starting prices (e.g. 1.2 Crore) and possession dates according to project facts.
+  Never invent WhatsApp or visit confirmations if tools return errors.
+tools_schema:
+  - name: "check_unit_availability"
+    description: "Check if BHK configuration units are available"
+    parameters:
+      type: "object"
+      properties:
+        bhk:
+          type: "number"
+  - name: "book_site_visit"
+    description: "Book an in-person site visit"
+    parameters:
+      type: "object"
+      properties:
+        preferred_date:
+          type: "string"
+        bhk:
+          type: "number"
+  - name: "mark_dnc"
+    description: "Record Do Not Call compliance request"
+    parameters:
+      type: "object"
+      properties:
+        reason:
+          type: "string"

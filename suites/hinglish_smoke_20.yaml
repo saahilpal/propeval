@@ -1,0 +1,327 @@
+schema_version: "1.0"
+suite_id: "hinglish_smoke_20"
+suite_name: "Hinglish Real Estate Tier-1 Smoke Suite"
+suite_tier: "smoke_pr"
+version_tag: "2026.11.1"
+description: "20 fast Tier-1 PR smoke scenarios covering budget switches, DNC compliance, RERA queries, and visit bookings."
+
+scenarios:
+  - scenario_id: "smoke_01_std_lodha_2bhk"
+    name: "Standard 2 BHK inquiry with RERA check and visit booking"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_01_std_lodha_2bhk"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_02_dnc_immediate"
+    name: "Buyer explicitly triggers Do Not Call on turn 2"
+    max_turns: 4
+    asr_noise_profile: "clean"
+    expected_tools: ["mark_dnc"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_02_dnc_immediate"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: false
+        wants_dnc: true
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_03_budget_switch_crore_lakh"
+    name: "Metamorphic budget equivalence check (120 lakh == 1.2 cr)"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_03_budget_switch_crore_lakh"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "120 lakh"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_04_hindi_colloquial_currency"
+    name: "Colloquial Hindi currency formulation (ek crore bees lakh)"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_04_hindi_colloquial_currency"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "ek crore bees lakh"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_05_rera_verification"
+    name: "Strict MahaRERA P52100012345 verification"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    expected_tools: []
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_05_rera_verification"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: false
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_06_weekend_saturday_booking"
+    name: "Direct Saturday visit scheduling"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_06_weekend_saturday_booking"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_07_sunday_visit_booking"
+    name: "Sunday family site visit booking"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_07_sunday_visit_booking"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.25 cr"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_08_dnc_frustrated"
+    name: "Frustrated buyer DNC exit command"
+    max_turns: 4
+    asr_noise_profile: "clean"
+    expected_tools: ["mark_dnc"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_08_dnc_frustrated"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: false
+        wants_dnc: true
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_09_budget_upgrade_3bhk"
+    name: "3 BHK premium unit inquiry and budget revelation (1.75 cr)"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_09_budget_upgrade_3bhk"
+        target_project: "Lodha Wakad"
+        target_bhk: 3.0
+        budget_raw: "1.75 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_10_possession_q4_2026"
+    name: "Possession timeline verification for Q4 2026"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    expected_tools: []
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_10_possession_q4_2026"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: false
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_11_dlf_gurugram_3bhk"
+    name: "DLF Gurugram 3 BHK luxury inquiry starting at 2.5 cr"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_11_dlf_gurugram_3bhk"
+        target_project: "DLF The Arbour"
+        target_bhk: 3.0
+        budget_raw: "2.5 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_12_dlf_rera_ggm_700"
+    name: "DLF Gurugram Haryana RERA registration inquiry (GGM/700/2026)"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    expected_tools: []
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_12_dlf_rera_ggm_700"
+        target_project: "DLF The Arbour"
+        target_bhk: 3.0
+        budget_raw: "2.5 cr"
+        wants_rera_check: true
+        wants_site_visit: false
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_13_dnc_polite_optout"
+    name: "Polite buyer opting out with DNC request"
+    max_turns: 4
+    asr_noise_profile: "clean"
+    expected_tools: ["mark_dnc"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_13_dnc_polite_optout"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: false
+        wants_dnc: true
+        language_register: "english_code_switch"
+
+  - scenario_id: "smoke_14_slang_peti_budget"
+    name: "Mumbai real estate slang budget: 120 peti"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_14_slang_peti_budget"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "120 peti"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_15_carpet_area_inquiry"
+    name: "Carpet area inquiry for 780 sq.ft 2 BHK"
+    max_turns: 5
+    asr_noise_profile: "clean"
+    expected_tools: []
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_15_carpet_area_inquiry"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: false
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_16_amenities_and_visit"
+    name: "Amenities clarification followed by weekend visit"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_16_amenities_and_visit"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_17_hinglish_code_switch_high"
+    name: "Dense code-switching Hinglish dialect variation"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_17_hinglish_code_switch_high"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: true
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hindi_dominant"
+
+  - scenario_id: "smoke_18_dnc_after_price"
+    name: "DNC request after learning starting price"
+    max_turns: 4
+    asr_noise_profile: "clean"
+    expected_tools: ["mark_dnc"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_18_dnc_after_price"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "90 lakh"
+        wants_rera_check: false
+        wants_site_visit: false
+        wants_dnc: true
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_19_tower_preference"
+    name: "Tower A availability inquiry and visit scheduling"
+    max_turns: 6
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_19_tower_preference"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"
+
+  - scenario_id: "smoke_20_quick_site_visit_confirm"
+    name: "Concise 3-turn quick visit booking"
+    max_turns: 4
+    asr_noise_profile: "clean"
+    expected_tools: ["book_site_visit"]
+    fsm_spec:
+      agenda:
+        scenario_id: "smoke_20_quick_site_visit_confirm"
+        target_project: "Lodha Wakad"
+        target_bhk: 2.0
+        budget_raw: "1.2 cr"
+        wants_rera_check: false
+        wants_site_visit: true
+        wants_dnc: false
+        language_register: "hinglish"

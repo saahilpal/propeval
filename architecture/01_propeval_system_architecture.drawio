@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-20T14:30:00.000Z" agent="PropEval Architecture" version="24.0.0" type="device">
+  <diagram id="propeval-sys-arch" name="PropEval Modular Monolith System Architecture">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="980" background="#0F172A" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title Block -->
+        <mxCell id="title" value="&lt;b style='font-size:20px; color:#F8FAFC;'&gt;PropEval Modular Monolith System Architecture&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:12px; color:#94A3B8;'&gt;PostgreSQL 17 SKIP LOCKED Queue • Two-Phase Budget Reservations • Durable SSE Streams • Multi-Tenant FORCE RLS • Jaeger Tracing&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;rounded=1;fillColor=#1E293B;strokeColor=#334155;strokeWidth=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1320" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- CONTAINER 1: Frontend Client UI -->
+        <mxCell id="c_ui" value="&lt;b style='color:#38BDF8;'&gt;FRONTEND CLIENT WORKBENCH (Next.js 16 / React 19)&lt;/b&gt;" style="swimlane;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#38BDF8;strokeWidth=2;fontColor=#F8FAFC;rounded=1;arcSize=6;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="360" height="420" as="geometry" />
+        </mxCell>
+        <mxCell id="ui_diff" value="&lt;b&gt;Experiment Diff Workbench&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Non-compensatory paired comparisons&lt;br&gt;McNemar p-values &amp;amp; Newcombe 95% CIs&lt;br&gt;Keyboard-driven [j]/[k] triage&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_ui">
+          <mxGeometry x="20" y="40" width="320" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ui_inspector" value="&lt;b&gt;Side-by-Side Turn Inspector&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Synchronized 8 kHz audio transcripts&lt;br&gt;Raw vs Perturbed Hinglish dialogue&lt;br&gt;Tool call &amp;amp; outcome verification&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_ui">
+          <mxGeometry x="20" y="115" width="320" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ui_telemetry" value="&lt;b&gt;Cascade Telemetry &amp;amp; Anti-Cheat HUD&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Real-time subword confidence gating&lt;br&gt;92.06% System-1 resolution rate&lt;br&gt;XML Nonce &amp;amp; Length bias detectors&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_ui">
+          <mxGeometry x="20" y="190" width="320" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ui_registry" value="&lt;b&gt;Prompt &amp;amp; Fixture Registry&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Immutable prompt versions (SHA-256)&lt;br&gt;RERA project ground truth facts (GIN)&lt;br&gt;Stratified scenario suite management&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_ui">
+          <mxGeometry x="20" y="265" width="320" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ui_sse" value="&lt;b&gt;EventSource SSE Client&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Durable auto-reconnecting stream&lt;br&gt;HTTP Last-Event-ID resume cursor&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#0284C7;strokeWidth=1;fontColor=#38BDF8;align=left;spacingLeft=10;" vertex="1" parent="c_ui">
+          <mxGeometry x="20" y="340" width="320" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- CONTAINER 2: FastAPI Control Plane -->
+        <mxCell id="c_api" value="&lt;b style='color:#A855F7;'&gt;FASTAPI CONTROL PLANE (Modular Monolith)&lt;/b&gt;" style="swimlane;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#A855F7;strokeWidth=2;fontColor=#F8FAFC;rounded=1;arcSize=6;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="440" y="90" width="440" height="420" as="geometry" />
+        </mxCell>
+        <mxCell id="api_gw" value="&lt;b&gt;RFC 9457 Problem Details &amp;amp; Security Guard&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Tenant context extractor &amp;amp; API Key authenticator&lt;br&gt;IETF Idempotency-Key validation (24h cache)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_api">
+          <mxGeometry x="20" y="40" width="400" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="api_endpoints" value="&lt;b&gt;REST Control Endpoints (/api/v1)&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;• POST /runs (enqueue 2*N*K jobs in 1 ACID txn)&lt;br&gt;• GET /runs/{id}/diff (paired stats &amp;amp; hard-gate matrix)&lt;br&gt;• GET /metrics/cascade (0.365ms p50, 92.06% resolution)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_api">
+          <mxGeometry x="20" y="105" width="400" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="api_sse" value="&lt;b&gt;Durable SSE Engine (/runs/{id}/stream)&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Replays missed run_events from Last-Event-ID&lt;br&gt;Bridges PostgreSQL LISTEN run_events_channel&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#9333EA;fontColor=#C084FC;align=left;spacingLeft=10;" vertex="1" parent="c_api">
+          <mxGeometry x="20" y="185" width="400" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="api_budget" value="&lt;b&gt;Two-Phase Budget Guard&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Atomic reserve_budget() checks (spent + active &amp;lt;= max)&lt;br&gt;Zero permanent leak guarantee on worker crash&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_api">
+          <mxGeometry x="20" y="250" width="400" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="api_otel" value="&lt;b&gt;OpenTelemetry SDK Instrumentation&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Traced request pipelines • AsyncPG span injectors&lt;br&gt;Exports spans to Jaeger via OTLP / gRPC (Port 4317)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_api">
+          <mxGeometry x="20" y="315" width="400" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- CONTAINER 3: Evaluation Worker Engine -->
+        <mxCell id="c_worker" value="&lt;b style='color:#4ADE80;'&gt;AUTONOMOUS EVALUATION WORKER POOL&lt;/b&gt;" style="swimlane;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#4ADE80;strokeWidth=2;fontColor=#F8FAFC;rounded=1;arcSize=6;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="920" y="90" width="440" height="420" as="geometry" />
+        </mxCell>
+        <mxCell id="wk_loop" value="&lt;b&gt;Transactional Queue Claimer&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Invokes claim_next_eval_job(worker_id, lease_sec=60)&lt;br&gt;FOR UPDATE SKIP LOCKED with per-tenant fairness cap&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#16A34A;fontColor=#4ADE80;align=left;spacingLeft=10;" vertex="1" parent="c_worker">
+          <mxGeometry x="20" y="40" width="400" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="wk_sim" value="&lt;b&gt;Hybrid Buyer Simulator &amp;amp; Hinglish Realizer&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;BuyerAgendaFSM turn driver • Hinglish code-switching&lt;br&gt;8 kHz acoustic perturbation &amp;amp; MockRealEstateEnv faults&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_worker">
+          <mxGeometry x="20" y="105" width="400" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wk_cascade" value="&lt;b&gt;Laya Subword Cascade &amp;amp; System-2 Escalation&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;System-1: 0.365ms CPU classifier (τ_H=0.85, τ_L=0.15)&lt;br&gt;System-2: Randomized XML nonce judge for boundary turns&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_worker">
+          <mxGeometry x="20" y="175" width="400" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wk_fencing" value="&lt;b&gt;Monotonic Fence Token CAS Commits&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;fenced_persist_turn() &amp;amp; fenced_complete_job()&lt;br&gt;Rejects zombie/stale worker writes on lease reclaim&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#16A34A;fontColor=#4ADE80;align=left;spacingLeft=10;" vertex="1" parent="c_worker">
+          <mxGeometry x="20" y="245" width="400" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="wk_ledger" value="&lt;b&gt;Idempotent LLM Call Ledger (llm_call_ledger)&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Deterministic turn caching by SHA-256 prompt hash&lt;br&gt;$0 duplicate LLM billing on crash recovery&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_worker">
+          <mxGeometry x="20" y="310" width="400" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- CONTAINER 4: PostgreSQL 17 Storage Engine -->
+        <mxCell id="c_db" value="&lt;b style='color:#F59E0B;'&gt;POSTGRESQL 17 STORAGE ENGINE (Port 5433 • asyncpg / Alembic)&lt;/b&gt;" style="swimlane;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#F59E0B;strokeWidth=2;fontColor=#F8FAFC;rounded=1;arcSize=6;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="550" width="980" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="db_rls" value="&lt;b&gt;Multi-Tenant FORCE RLS&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;tenant_id = NULLIF(current_setting(&lt;br&gt;'app.current_tenant_id', true), '')::uuid&lt;br&gt;Enforced across all 14 tenant tables&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#D97706;fontColor=#FBBF24;align=left;spacingLeft=10;" vertex="1" parent="c_db">
+          <mxGeometry x="20" y="40" width="280" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="db_queue" value="&lt;b&gt;SECURITY DEFINER Queue Claim&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;claim_next_eval_job(p_worker_id, p_lease)&lt;br&gt;• FOR UPDATE OF j SKIP LOCKED&lt;br&gt;• Per-tenant active cap (max 20 jobs)&lt;br&gt;• Releases crashed fence_token reservations&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#D97706;fontColor=#FBBF24;align=left;spacingLeft=10;" vertex="1" parent="c_db">
+          <mxGeometry x="320" y="40" width="320" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="db_budget" value="&lt;b&gt;budget_reservations Ledger&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Status: ACTIVE | SETTLED | RELEASED&lt;br&gt;Zero hot-row update lock contention&lt;br&gt;Auto-reclaims on SIGKILL / lease expiry&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_db">
+          <mxGeometry x="660" y="40" width="300" height="85" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db_indexes" value="&lt;b&gt;Split Partial Indexes (Matching Query Predicates)&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;• idx_eval_jobs_queued: eval_jobs(priority DESC, run_after ASC) WHERE status = 'QUEUED'&lt;br&gt;• idx_eval_jobs_expired_lease: eval_jobs(lease_expires_at ASC) WHERE status = 'RUNNING'&lt;br&gt;• idx_budget_res_active: budget_reservations(run_id) WHERE status = 'ACTIVE'&lt;br&gt;• idx_run_events_stream: run_events(run_id, event_id ASC) [SSE Last-Event-ID]&lt;br&gt;• idx_eval_jobs_run_pair: eval_jobs(run_id, scenario_id, prompt_role)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_db">
+          <mxGeometry x="20" y="145" width="940" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db_tables" value="&lt;b&gt;Relational Core + JSONB Store (15 Tables Total)&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;tenants • tenant_credentials • http_idempotency_keys • prompt_versions • project_fixtures (GIN facts_json)&lt;br&gt;scenario_suites • eval_runs • budget_reservations • eval_jobs • run_events • conversation_turns&lt;br&gt;assertion_results • llm_call_ledger • calibration_anchors • judge_calibrations&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_db">
+          <mxGeometry x="20" y="265" width="940" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db_autovac" value="&lt;span style='font-size:11px; color:#F59E0B;'&gt;⚡ Aggressive Autovacuum Configured: autovacuum_vacuum_scale_factor = 0.02 on eval_jobs, budget_reservations, eval_runs&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="c_db">
+          <mxGeometry x="20" y="340" width="940" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- CONTAINER 5: Observability -->
+        <mxCell id="c_obs" value="&lt;b style='color:#F43F5E;'&gt;OBSERVABILITY &amp;amp; TELEMETRY&lt;/b&gt;" style="swimlane;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#F43F5E;strokeWidth=2;fontColor=#F8FAFC;rounded=1;arcSize=6;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="550" width="320" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="obs_jaeger" value="&lt;b&gt;Jaeger Tracing Server&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;Port 16686 (UI) • Port 4317 (gRPC)&lt;br&gt;Port 4318 (HTTP OTLP collector)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#E11D48;fontColor=#FDA4AF;align=left;spacingLeft=10;" vertex="1" parent="c_obs">
+          <mxGeometry x="20" y="40" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="obs_spans" value="&lt;b&gt;End-to-End Traced Spans&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;• POST /api/v1/runs&lt;br&gt;• storage.claim_job (wait time)&lt;br&gt;• engine.fsm_turn (LLM latency)&lt;br&gt;• laya.system1_classify (0.36ms)&lt;br&gt;• evaluation.system2_judge&lt;br&gt;• stats.mcnemar_paired&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_obs">
+          <mxGeometry x="20" y="125" width="280" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="obs_sla" value="&lt;b&gt;SLO / SLA Guards&lt;/b&gt;&lt;br&gt;&lt;span style='font-size:11px;color:#94A3B8;'&gt;• CPU Latency SLA &amp;lt; 25ms (p95 &amp;lt; 1ms)&lt;br&gt;• Zero permanent budget leak&lt;br&gt;• Underpowered test alerts&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;fontColor=#F8FAFC;align=left;spacingLeft=10;" vertex="1" parent="c_obs">
+          <mxGeometry x="20" y="275" width="280" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- CONNECTORS / DATA FLOW EDGES -->
+        <!-- UI to API -->
+        <mxCell id="e_ui_api" value="REST Requests (X-Tenant-ID, Idempotency-Key)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#38BDF8;strokeWidth=2;fontColor=#38BDF8;fontSize=11;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" source="c_ui" target="c_api" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- API SSE to UI -->
+        <mxCell id="e_sse_ui" value="Durable SSE Event Stream (Last-Event-ID)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C084FC;strokeWidth=2;fontColor=#C084FC;fontSize=11;exitX=0;exitY=0.45;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" source="c_api" target="c_ui" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- API to DB -->
+        <mxCell id="e_api_db" value="ACID Run Creation &amp;amp; Budget Reservation" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F59E0B;strokeWidth=2;fontColor=#F59E0B;fontSize=11;exitX=0.35;exitY=1;exitDx=0;exitDy=0;entryX=0.45;entryY=0;entryDx=0;entryDy=0;" edge="1" source="c_api" target="c_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Worker to DB (Claim) -->
+        <mxCell id="e_wk_db" value="claim_next_eval_job() [FOR UPDATE SKIP LOCKED]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4ADE80;strokeWidth=2;fontColor=#4ADE80;fontSize=11;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.85;entryY=0;entryDx=0;entryDy=0;" edge="1" source="c_worker" target="c_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Worker to DB (Commit) -->
+        <mxCell id="e_wk_commit" value="fenced_persist_turn() &amp;amp; settle_budget()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#16A34A;strokeWidth=2;fontColor=#4ADE80;fontSize=11;exitX=0.4;exitY=1;exitDx=0;exitDy=0;entryX=0.92;entryY=0;entryDx=0;entryDy=0;" edge="1" source="c_worker" target="c_db" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- API/Worker to OTel/Jaeger -->
+        <mxCell id="e_api_obs" value="OTLP Spans" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F43F5E;strokeWidth=2;fontColor=#F43F5E;fontSize=11;exitX=0.8;exitY=1;exitDx=0;exitDy=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;" edge="1" source="c_api" target="c_obs" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_wk_obs" value="OTLP Spans" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F43F5E;strokeWidth=2;fontColor=#F43F5E;fontSize=11;exitX=0.7;exitY=1;exitDx=0;exitDy=0;entryX=0.7;entryY=0;entryDx=0;entryDy=0;" edge="1" source="c_worker" target="c_obs" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
